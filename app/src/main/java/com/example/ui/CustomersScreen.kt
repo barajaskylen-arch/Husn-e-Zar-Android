@@ -6,10 +6,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -17,7 +15,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -43,15 +40,15 @@ fun CustomersScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Customer Directory", fontWeight = FontWeight.Bold, color = Gold) },
+                title = { Text("Customer Directory", fontWeight = FontWeight.Bold, color = Yellow) },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = NavyDark,
-                    titleContentColor = Gold,
-                    actionIconContentColor = White
+                    containerColor = DarkBlue,
+                    titleContentColor = Yellow,
+                    actionIconContentColor = Yellow
                 ),
                 actions = {
                     IconButton(onClick = onAddCustomer) {
-                        Icon(Icons.Default.PersonAdd, contentDescription = "Add Customer", tint = Gold)
+                        Icon(Icons.Default.PersonAdd, contentDescription = "Add Customer", tint = Yellow)
                     }
                 }
             )
@@ -59,18 +56,18 @@ fun CustomersScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = onAddCustomer,
-                containerColor = Gold,
-                contentColor = NavyDark
+                containerColor = Yellow,
+                contentColor = DarkBlue
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Add Customer")
             }
         },
-        containerColor = NavyDark
+        containerColor = Color.White
     ) { paddingVals ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .background(NavyDark)
+                .background(Color.White)
                 .padding(paddingVals)
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -80,19 +77,11 @@ fun CustomersScreen(
                     value = searchQuery,
                     onValueChange = customersViewModel::updateSearchQuery,
                     modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text("Search by name, phone or address...", color = TextSecondary) },
-                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search", tint = Gold) },
+                    placeholder = { Text("Search by name, phone or address...", color = DarkBlue.copy(alpha = 0.6f), fontWeight = FontWeight.Bold) },
+                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search", tint = DarkBlue) },
                     singleLine = true,
-                    shape = RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Gold,
-                        unfocusedBorderColor = NavyBorder,
-                        focusedContainerColor = NavyMedium,
-                        unfocusedContainerColor = NavyMedium,
-                        focusedTextColor = White,
-                        unfocusedTextColor = White,
-                        cursorColor = Gold
-                    )
+                    shape = RoundedCornerShape(14.dp),
+                    colors = standardTextFieldColors()
                 )
             }
 
@@ -100,12 +89,13 @@ fun CustomersScreen(
                 item {
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = NavyMedium),
+                        colors = CardDefaults.cardColors(containerColor = DarkBlue),
                         border = BorderStroke(1.dp, CardBorder),
-                        shape = RoundedCornerShape(14.dp)
+                        shape = RoundedCornerShape(20.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
                     ) {
                         Box(Modifier.padding(32.dp).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                            Text("No customers found.", color = TextSecondary)
+                            Text("No customers found.", color = Color.White.copy(alpha = 0.8f), fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -116,8 +106,9 @@ fun CustomersScreen(
                             .fillMaxWidth()
                             .clickable { onNavigateToDetails(customer.id) },
                         border = BorderStroke(1.dp, CardBorder),
-                        colors = CardDefaults.cardColors(containerColor = NavyMedium),
-                        shape = RoundedCornerShape(14.dp)
+                        colors = CardDefaults.cardColors(containerColor = DarkBlue),
+                        shape = RoundedCornerShape(20.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
                             Row(
@@ -129,18 +120,18 @@ fun CustomersScreen(
                                     customer.name,
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
-                                    color = Gold
+                                    color = Yellow
                                 )
                                 IconButton(
                                     onClick = { showEditCustomerModal = customer },
-                                    modifier = Modifier.size(28.dp)
+                                    modifier = Modifier.size(32.dp)
                                 ) {
-                                    Icon(Icons.Default.Edit, contentDescription = "Edit Customer", tint = TextSecondary)
+                                    Icon(Icons.Default.Edit, contentDescription = "Edit Customer", tint = Yellow)
                                 }
                             }
                             Spacer(Modifier.height(4.dp))
-                            Text("Phone: ${customer.phone}", style = MaterialTheme.typography.bodyMedium, color = White)
-                            Text("Address: ${customer.address}", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
+                            Text("Phone: ${customer.phone}", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = Color.White)
+                            Text("Address: ${customer.address}", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = Color.White.copy(alpha = 0.75f))
                             Spacer(Modifier.height(10.dp))
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -150,17 +141,17 @@ fun CustomersScreen(
                                 Surface(
                                     color = if (customer.pendingBalance > 0) AlertRedBg else AlertGreenBg,
                                     shape = RoundedCornerShape(8.dp),
-                                    border = BorderStroke(1.dp, if (customer.pendingBalance > 0) ExpenseRed else ProfitGreen)
+                                    border = BorderStroke(1.dp, if (customer.pendingBalance > 0) AlertRed else SuccessGreen)
                                 ) {
                                     Text(
                                         text = if (customer.pendingBalance > 0) "Pending: ${formatMoney(customer.pendingBalance)}" else "No Pending Balance",
-                                        color = if (customer.pendingBalance > 0) ExpenseRed else ProfitGreen,
+                                        color = if (customer.pendingBalance > 0) AlertRed else SuccessGreen,
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 12.sp,
                                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
                                     )
                                 }
-                                Text("Joined: ${customer.joiningDate}", style = MaterialTheme.typography.labelSmall, color = TextSecondary)
+                                Text("Joined: ${customer.joiningDate}", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = Color.White.copy(alpha = 0.7f))
                             }
                         }
                     }
@@ -172,7 +163,7 @@ fun CustomersScreen(
 
     if (showEditCustomerModal != null) {
         val cust = showEditCustomerModal!!
-        EditCustomerModalBottomSheet(
+        EditCustomerDialog(
             customer = cust,
             onDismiss = { showEditCustomerModal = null },
             onSave = { updatedName, updatedPhone, updatedAddress ->
@@ -183,9 +174,8 @@ fun CustomersScreen(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EditCustomerModalBottomSheet(
+fun EditCustomerDialog(
     customer: Customer,
     onDismiss: () -> Unit,
     onSave: (String, String, String) -> Unit
@@ -194,79 +184,44 @@ fun EditCustomerModalBottomSheet(
     var phone by remember { mutableStateOf(customer.phone) }
     var address by remember { mutableStateOf(customer.address) }
 
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        containerColor = NavyMedium,
-        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp)
-                .padding(bottom = 36.dp)
-                .verticalScroll(rememberScrollState())
-        ) {
-            BottomSheetHeader(title = "Edit Customer", onDismiss = onDismiss)
-
-            OutlinedTextField(
-                value = name,
-                onValueChange = { name = it },
-                label = { Text("Customer Name *") },
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.fillMaxWidth(),
-                colors = standardTextFieldColors()
-            )
-            Spacer(Modifier.height(12.dp))
-
-            OutlinedTextField(
-                value = phone,
-                onValueChange = { if (it.length <= 15) phone = it },
-                label = { Text("Phone Number *") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.fillMaxWidth(),
-                colors = standardTextFieldColors()
-            )
-            Spacer(Modifier.height(12.dp))
-
-            OutlinedTextField(
-                value = address,
-                onValueChange = { address = it },
-                label = { Text("Address *") },
-                minLines = 2,
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.fillMaxWidth(),
-                colors = standardTextFieldColors()
-            )
-            Spacer(Modifier.height(24.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                OutlinedButton(
-                    onClick = onDismiss,
-                    border = BorderStroke(1.dp, NavyBorder),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = TextSecondary),
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text("Cancel")
-                }
-                Button(
-                    onClick = {
-                        if (name.isNotBlank() && phone.isNotBlank() && address.isNotBlank()) {
-                            onSave(name.trim(), phone.trim(), address.trim())
-                        }
-                    },
-                    enabled = name.isNotBlank() && phone.isNotBlank() && address.isNotBlank(),
-                    colors = ButtonDefaults.buttonColors(containerColor = Gold, contentColor = NavyDark),
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text("Save Changes", fontWeight = FontWeight.Bold)
-                }
+    AnimatedCenterDialog(
+        onDismiss = onDismiss,
+        title = "Edit Customer",
+        icon = Icons.Default.Edit,
+        saveEnabled = name.isNotBlank() && phone.isNotBlank() && address.isNotBlank(),
+        onSave = {
+            if (name.isNotBlank() && phone.isNotBlank() && address.isNotBlank()) {
+                onSave(name.trim(), phone.trim(), address.trim())
             }
         }
+    ) {
+        OutlinedTextField(
+            value = name,
+            onValueChange = { name = it },
+            label = { Text("Customer Name *", fontWeight = FontWeight.Bold) },
+            shape = RoundedCornerShape(14.dp),
+            modifier = Modifier.fillMaxWidth(),
+            colors = standardTextFieldColors()
+        )
+
+        OutlinedTextField(
+            value = phone,
+            onValueChange = { if (it.length <= 15) phone = it },
+            label = { Text("Phone Number *", fontWeight = FontWeight.Bold) },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+            shape = RoundedCornerShape(14.dp),
+            modifier = Modifier.fillMaxWidth(),
+            colors = standardTextFieldColors()
+        )
+
+        OutlinedTextField(
+            value = address,
+            onValueChange = { address = it },
+            label = { Text("Address *", fontWeight = FontWeight.Bold) },
+            minLines = 2,
+            shape = RoundedCornerShape(14.dp),
+            modifier = Modifier.fillMaxWidth(),
+            colors = standardTextFieldColors()
+        )
     }
 }

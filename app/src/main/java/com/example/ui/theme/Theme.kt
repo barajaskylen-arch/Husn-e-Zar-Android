@@ -1,28 +1,30 @@
 package com.example.ui.theme
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.darkColorScheme
-import androidx.compose.runtime.Composable
 
-private val DarkNavyScheme = darkColorScheme(
-    primary = Gold,
-    onPrimary = NavyDark,
-    primaryContainer = NavyLight,
-    onPrimaryContainer = White,
-    secondary = GoldLight,
-    onSecondary = NavyDark,
-    secondaryContainer = NavyMedium,
-    onSecondaryContainer = WhiteSoft,
-    background = NavyDark,
-    onBackground = White,
-    surface = NavyMedium,
-    onSurface = White,
-    surfaceVariant = NavyLight,
-    onSurfaceVariant = TextSecondary,
-    outline = NavyBorder,
-    error = ExpenseRed,
-    onError = White,
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.lightColorScheme
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
+
+private val LightColorScheme = lightColorScheme(
+    primary = DarkBlue,
+    onPrimary = Color.White,
+    primaryContainer = Yellow,
+    onPrimaryContainer = DarkBlue,
+    secondary = Yellow,
+    onSecondary = DarkBlue,
+    secondaryContainer = YellowDeep,
+    onSecondaryContainer = DarkBlue,
+    background = Color.White,
+    onBackground = DarkBlue,
+    surface = Color.White,
+    onSurface = DarkBlue,
+    surfaceVariant = Color(0xFFF4F6F9),
+    onSurfaceVariant = Color(0xFF5A6E85),
+    outline = DarkBlue,
+    error = AlertRed,
+    onError = Color.White,
     errorContainer = AlertRedBg,
-    onErrorContainer = ExpenseRed
+    onErrorContainer = AlertRed
 )
 
 @Composable
@@ -30,7 +32,7 @@ fun MyApplicationTheme(
     content: @Composable () -> Unit
 ) {
     MaterialTheme(
-        colorScheme = DarkNavyScheme,
+        colorScheme = LightColorScheme,
         typography = Typography,
         content = content
     )

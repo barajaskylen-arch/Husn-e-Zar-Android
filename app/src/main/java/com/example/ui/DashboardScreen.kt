@@ -34,18 +34,18 @@ fun DashboardScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Husn e Zar", fontWeight = FontWeight.Bold, color = Gold) },
+                title = { Text("Husn e Zar", fontWeight = FontWeight.Bold, color = Yellow) },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = NavyDark,
-                    titleContentColor = Gold,
-                    actionIconContentColor = White
+                    containerColor = DarkBlue,
+                    titleContentColor = Yellow,
+                    actionIconContentColor = Yellow
                 ),
                 actions = {
                     IconButton(onClick = onNavigateToPricing) {
                         Icon(
                             Icons.Default.Calculate,
                             contentDescription = "Price Calculator",
-                            tint = Gold
+                            tint = Yellow
                         )
                     }
                 }
@@ -55,35 +55,35 @@ fun DashboardScreen(
             Column(horizontalAlignment = Alignment.End) {
                 SmallFloatingActionButton(
                     onClick = onAddCustomer,
-                    containerColor = Gold,
-                    contentColor = NavyDark,
+                    containerColor = Yellow,
+                    contentColor = DarkBlue,
                     modifier = Modifier.padding(bottom = 8.dp)
                 ) {
                     Icon(Icons.Default.PersonAdd, contentDescription = "Add Customer")
                 }
                 SmallFloatingActionButton(
                     onClick = onAddBalance,
-                    containerColor = Gold,
-                    contentColor = NavyDark,
+                    containerColor = Yellow,
+                    contentColor = DarkBlue,
                     modifier = Modifier.padding(bottom = 8.dp)
                 ) {
                     Icon(Icons.Default.AttachMoney, contentDescription = "Add Payment")
                 }
                 FloatingActionButton(
                     onClick = onAddExpense,
-                    containerColor = Gold,
-                    contentColor = NavyDark
+                    containerColor = Yellow,
+                    contentColor = DarkBlue
                 ) {
                     Icon(Icons.Default.Receipt, contentDescription = "Add Expense")
                 }
             }
         },
-        containerColor = NavyDark
+        containerColor = Color.White
     ) { paddingVals ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .background(NavyDark)
+                .background(Color.White)
                 .padding(paddingVals)
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -99,85 +99,105 @@ fun DashboardScreen(
                         text = "Dashboard Overview",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
-                        color = White
+                        color = DarkBlue
                     )
                     Text(
                         text = state.currentTime,
                         style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
                         color = TextSecondary
                     )
                 }
             }
 
-            // B. Today's Advanced Notification Container
+            // B. Alerts Section: RED if any alert, GREEN if none
             item {
-                if (state.lowStockWarning) {
+                val hasAlerts = state.lowStockWarning || state.overdueDebtors.isNotEmpty() || state.uncheckedTasksReminder
+
+                if (hasAlerts) {
+                    if (state.lowStockWarning) {
+                        AlertCard(
+                            title = "Low Stock Warning",
+                            message = "Total remaining available jars in stock is 5 or less.",
+                            containerColor = AlertRedBg,
+                            borderColor = AlertRed,
+                            iconColor = AlertRed,
+                            icon = Icons.Default.Warning
+                        )
+                    }
+                    state.overdueDebtors.forEach { msg ->
+                        AlertCard(
+                            title = "Overdue Debtor Alert",
+                            message = msg,
+                            containerColor = AlertRedBg,
+                            borderColor = AlertRed,
+                            iconColor = AlertRed,
+                            icon = Icons.Default.MoneyOff
+                        )
+                    }
+                    if (state.uncheckedTasksReminder) {
+                        AlertCard(
+                            title = "Daily Progress Reminder",
+                            message = "You have unchecked tasks in your Daily Progress list today.",
+                            containerColor = AlertRedBg,
+                            borderColor = AlertRed,
+                            iconColor = AlertRed,
+                            icon = Icons.Default.Checklist
+                        )
+                    }
+                } else {
                     AlertCard(
-                        title = "Low Stock Warning",
-                        message = "Total remaining available jars in stock is 5 or less.",
-                        containerColor = AlertRedBg,
-                        borderColor = ExpenseRed,
-                        iconColor = ExpenseRed,
-                        icon = Icons.Default.Warning
-                    )
-                }
-                state.overdueDebtors.forEach { msg ->
-                    AlertCard(
-                        title = "Overdue Debtor Alert",
-                        message = msg,
-                        containerColor = AlertRedBg,
-                        borderColor = ExpenseRed,
-                        iconColor = ExpenseRed,
-                        icon = Icons.Default.MoneyOff
-                    )
-                }
-                if (state.uncheckedTasksReminder) {
-                    AlertCard(
-                        title = "Daily Progress Reminder",
-                        message = "You have unchecked tasks in your Daily Progress list today.",
-                        containerColor = AlertYellowBg,
-                        borderColor = GoldLight,
-                        iconColor = GoldLight,
-                        icon = Icons.Default.Checklist
+                        title = "No Alert - Sab theek hai",
+                        message = "Tamam operations, inventory stock aur payments theek hain.",
+                        containerColor = AlertGreenBg,
+                        borderColor = SuccessGreen,
+                        iconColor = SuccessGreen,
+                        icon = Icons.Default.CheckCircle
                     )
                 }
             }
 
             // C. This Month Overview
             item {
-                Text("This Month Overview", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = Gold)
+                Text(
+                    "This Month Overview",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = DarkBlue
+                )
                 Spacer(Modifier.height(8.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    MetricCard("Total Sales", formatMoney(state.currentMonthTotalSales), Modifier.weight(1f), valueColor = White)
-                    MetricCard("Total Expense", formatMoney(state.currentMonthTotalExpense), Modifier.weight(1f), valueColor = ExpenseRed)
+                    MetricCard("Total Sales", formatMoney(state.currentMonthTotalSales), Modifier.weight(1f), valueColor = Color.White)
+                    MetricCard("Total Expense", formatMoney(state.currentMonthTotalExpense), Modifier.weight(1f), valueColor = AlertRed)
                 }
                 Spacer(Modifier.height(8.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    MetricCard("Jars Sold", "${state.currentMonthJarsSold}", Modifier.weight(1f), valueColor = GoldLight)
-                    MetricCard("Net Profit", formatMoney(state.currentMonthNetProfit), Modifier.weight(1f), valueColor = if (state.currentMonthNetProfit >= 0) ProfitGreen else ExpenseRed)
+                    MetricCard("Jars Sold", "${state.currentMonthJarsSold}", Modifier.weight(1f), valueColor = Yellow)
+                    MetricCard("Net Profit", formatMoney(state.currentMonthNetProfit), Modifier.weight(1f), valueColor = if (state.currentMonthNetProfit >= 0) SuccessGreen else AlertRed)
                 }
                 Spacer(Modifier.height(8.dp))
                 Card(
-                    colors = CardDefaults.cardColors(containerColor = NavyMedium),
+                    colors = CardDefaults.cardColors(containerColor = DarkBlue),
                     border = BorderStroke(1.dp, CardBorder),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(20.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
                 ) {
                     Column(Modifier.padding(16.dp).fillMaxWidth()) {
-                        Text("Credit Exposure Metrics", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = Gold)
+                        Text("Credit Exposure Metrics", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = Yellow)
                         Spacer(Modifier.height(8.dp))
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text("Unpaid Customers:", color = TextSecondary)
-                            Text("${state.currentMonthUnpaidCustomersCount}", color = White, fontWeight = FontWeight.Bold)
+                            Text("Unpaid Customers:", color = Color.White.copy(alpha = 0.8f), fontWeight = FontWeight.Bold)
+                            Text("${state.currentMonthUnpaidCustomersCount}", color = Color.White, fontWeight = FontWeight.Bold)
                         }
-                        Spacer(Modifier.height(4.dp))
+                        Spacer(Modifier.height(6.dp))
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text("Remaining Balance Owed:", color = TextSecondary)
-                            Text(formatMoney(state.currentMonthRemainingBalanceOwed), color = ExpenseRed, fontWeight = FontWeight.Bold)
+                            Text("Remaining Balance Owed:", color = Color.White.copy(alpha = 0.8f), fontWeight = FontWeight.Bold)
+                            Text(formatMoney(state.currentMonthRemainingBalanceOwed), color = AlertRed, fontWeight = FontWeight.Bold)
                         }
-                        Spacer(Modifier.height(4.dp))
+                        Spacer(Modifier.height(6.dp))
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text("New Customers Joined:", color = TextSecondary)
-                            Text("${state.currentMonthNewCustomers}", color = ProfitGreen, fontWeight = FontWeight.Bold)
+                            Text("New Customers Joined:", color = Color.White.copy(alpha = 0.8f), fontWeight = FontWeight.Bold)
+                            Text("${state.currentMonthNewCustomers}", color = SuccessGreen, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -185,54 +205,90 @@ fun DashboardScreen(
 
             // D. Today's Summary
             item {
-                Text("Today's Summary", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = Gold)
+                Text("Today's Summary", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = DarkBlue)
                 Spacer(Modifier.height(8.dp))
                 Card(
-                    colors = CardDefaults.cardColors(containerColor = NavyMedium),
+                    colors = CardDefaults.cardColors(containerColor = DarkBlue),
                     border = BorderStroke(1.dp, CardBorder),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(20.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
                 ) {
                     Column(Modifier.padding(16.dp).fillMaxWidth()) {
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text("Income Received:", color = TextSecondary)
-                            Text(formatMoney(state.todayReceivedIncome), color = ProfitGreen, fontWeight = FontWeight.Bold)
+                            Text("Income Received:", color = Color.White.copy(alpha = 0.8f), fontWeight = FontWeight.Bold)
+                            Text(formatMoney(state.todayReceivedIncome), color = SuccessGreen, fontWeight = FontWeight.Bold)
                         }
-                        Spacer(Modifier.height(4.dp))
+                        Spacer(Modifier.height(6.dp))
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text("Jars Sold:", color = TextSecondary)
-                            Text("${state.todayJarsSoldAmount}", color = GoldLight, fontWeight = FontWeight.Bold)
+                            Text("Jars Sold:", color = Color.White.copy(alpha = 0.8f), fontWeight = FontWeight.Bold)
+                            Text("${state.todayJarsSoldAmount}", color = Yellow, fontWeight = FontWeight.Bold)
                         }
-                        Spacer(Modifier.height(4.dp))
+                        Spacer(Modifier.height(6.dp))
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text("Expenses Outgoing:", color = TextSecondary)
-                            Text(formatMoney(state.todayOutgoingExpense), color = ExpenseRed, fontWeight = FontWeight.Bold)
+                            Text("Expenses Outgoing:", color = Color.White.copy(alpha = 0.8f), fontWeight = FontWeight.Bold)
+                            Text(formatMoney(state.todayOutgoingExpense), color = AlertRed, fontWeight = FontWeight.Bold)
                         }
-                        Spacer(Modifier.height(4.dp))
+                        Spacer(Modifier.height(6.dp))
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text("Expected Remaining Balance:", color = TextSecondary)
-                            Text(formatMoney(state.todayExpectedRemainingBalance), color = White, fontWeight = FontWeight.Bold)
+                            Text("Expected Remaining Balance:", color = Color.White.copy(alpha = 0.8f), fontWeight = FontWeight.Bold)
+                            Text(formatMoney(state.todayExpectedRemainingBalance), color = Color.White, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
             }
 
-            // F. Historical 3-Months Trend Comparison Cards
+            // F. Last 6 Months Report
             if (state.historicalTrends.isNotEmpty()) {
                 item {
-                    Text("Historical Trends", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = Gold)
+                    Text("Last 6 Months Report", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = DarkBlue)
                     Spacer(Modifier.height(8.dp))
                 }
-                items(state.historicalTrends) { trend ->
+                items(state.historicalTrends) { report ->
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = NavyMedium),
-                        border = BorderStroke(1.dp, CardBorder),
-                        shape = RoundedCornerShape(12.dp)
+                        colors = CardDefaults.cardColors(containerColor = DarkBlue),
+                        border = BorderStroke(1.dp, Yellow.copy(alpha = 0.3f)),
+                        shape = RoundedCornerShape(20.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
                     ) {
-                        Column(Modifier.padding(14.dp)) {
-                            Text(trend.monthName, fontWeight = FontWeight.Bold, color = Gold)
-                            Spacer(Modifier.height(4.dp))
-                            Text("Sale: ${formatMoney(trend.totalSale)} | Profit: ${formatMoney(trend.netProfit)} | Jars: ${trend.jarsSold}", color = WhiteSoft, fontSize = 13.sp)
+                        Column(Modifier.padding(16.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(report.monthLabel, fontWeight = FontWeight.Bold, color = Yellow, fontSize = 15.sp)
+                                Surface(
+                                    color = Yellow.copy(alpha = 0.15f),
+                                    shape = RoundedCornerShape(8.dp)
+                                ) {
+                                    Text(
+                                        "${report.jarsCreated} Jars Created",
+                                        color = Yellow,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 11.sp,
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                    )
+                                }
+                            }
+                            Spacer(Modifier.height(10.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Column {
+                                    Text("Total Sale", color = Color.White.copy(alpha = 0.7f), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                    Text(formatMoney(report.totalSale), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                                }
+                                Column {
+                                    Text("Total Expense", color = Color.White.copy(alpha = 0.7f), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                    Text(formatMoney(report.totalExpense), color = AlertRed, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                                }
+                                Column(horizontalAlignment = Alignment.End) {
+                                    Text("Total Revenue", color = Color.White.copy(alpha = 0.7f), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                    Text(formatMoney(report.totalRevenue), color = SuccessGreen, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                                }
+                            }
                         }
                     }
                 }
@@ -241,39 +297,52 @@ fun DashboardScreen(
             // G. Weekly Credit Alert List
             if (state.weeklyCreditAlerts.isNotEmpty()) {
                 item {
-                    Text("Weekly Credit Alerts", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = Gold)
+                    Text("Weekly Credit Alerts", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = DarkBlue)
                     Spacer(Modifier.height(8.dp))
                 }
                 items(state.weeklyCreditAlerts) { alert ->
+                    val isOverdue = alert.isOverdue
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = NavyMedium),
-                        border = BorderStroke(1.dp, if (alert.isOverdue) ExpenseRed else CardBorder),
-                        shape = RoundedCornerShape(12.dp)
+                        colors = CardDefaults.cardColors(containerColor = DarkBlue),
+                        border = BorderStroke(1.dp, if (isOverdue) AlertRed else SuccessGreen),
+                        shape = RoundedCornerShape(20.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
                     ) {
                         Row(
-                            Modifier.padding(14.dp).fillMaxWidth(),
+                            Modifier.padding(16.dp).fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Column {
-                                Text(alert.customerName, fontWeight = FontWeight.Bold, color = White)
-                                Text("Due: ${alert.dueDate}", style = MaterialTheme.typography.bodySmall, color = if (alert.isOverdue) ExpenseRed else TextSecondary)
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(alert.customerName, fontWeight = FontWeight.Bold, color = Color.White, fontSize = 15.sp)
+                                Spacer(Modifier.height(2.dp))
+                                Text(
+                                    "Due: ${alert.dueDate}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (isOverdue) AlertRed else Color.White.copy(alpha = 0.7f)
+                                )
                             }
                             Column(horizontalAlignment = Alignment.End) {
-                                Text(formatMoney(alert.pendingAmount), fontWeight = FontWeight.Bold, color = ExpenseRed)
-                                Spacer(Modifier.height(2.dp))
+                                Text(
+                                    formatMoney(alert.pendingAmount),
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (isOverdue) AlertRed else SuccessGreen,
+                                    fontSize = 15.sp
+                                )
+                                Spacer(Modifier.height(4.dp))
                                 Surface(
-                                    color = if (alert.isOverdue) AlertRedBg else AlertYellowBg,
+                                    color = if (isOverdue) AlertRedBg else AlertGreenBg,
                                     shape = RoundedCornerShape(6.dp),
-                                    border = BorderStroke(1.dp, if (alert.isOverdue) ExpenseRed else GoldLight)
+                                    border = BorderStroke(1.dp, if (isOverdue) AlertRed else SuccessGreen)
                                 ) {
                                     Text(
-                                        if (alert.isOverdue) "Overdue" else "Pending",
-                                        color = if (alert.isOverdue) ExpenseRed else GoldLight,
+                                        if (isOverdue) "Overdue" else "Pending",
+                                        color = if (isOverdue) AlertRed else SuccessGreen,
                                         fontSize = 10.sp,
                                         fontWeight = FontWeight.Bold,
-                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
                                     )
                                 }
                             }
@@ -281,7 +350,7 @@ fun DashboardScreen(
                     }
                 }
             }
-            
+
             item { Spacer(Modifier.height(80.dp)) }
         }
     }
@@ -297,18 +366,19 @@ fun AlertCard(
     icon: androidx.compose.ui.graphics.vector.ImageVector
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+        modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp),
         colors = CardDefaults.cardColors(containerColor = containerColor),
-        border = BorderStroke(1.dp, borderColor),
-        shape = RoundedCornerShape(12.dp)
+        border = BorderStroke(1.5.dp, borderColor),
+        shape = RoundedCornerShape(20.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
-            Icon(icon, contentDescription = null, tint = iconColor, modifier = Modifier.size(24.dp))
+        Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+            Icon(icon, contentDescription = null, tint = iconColor, modifier = Modifier.size(28.dp))
             Spacer(Modifier.width(14.dp))
             Column {
                 Text(title, fontWeight = FontWeight.Bold, color = iconColor, style = MaterialTheme.typography.titleSmall)
                 Spacer(Modifier.height(2.dp))
-                Text(message, color = WhiteSoft, style = MaterialTheme.typography.bodySmall)
+                Text(message, color = iconColor, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
             }
         }
     }
@@ -319,17 +389,18 @@ fun MetricCard(
     title: String,
     value: String,
     modifier: Modifier = Modifier,
-    valueColor: Color = White
+    valueColor: Color = Color.White
 ) {
     Card(
         modifier = modifier,
-        colors = CardDefaults.cardColors(containerColor = NavyMedium),
+        colors = CardDefaults.cardColors(containerColor = DarkBlue),
         border = BorderStroke(1.dp, CardBorder),
-        shape = RoundedCornerShape(12.dp)
+        shape = RoundedCornerShape(20.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
     ) {
-        Column(Modifier.padding(14.dp)) {
-            Text(title, style = MaterialTheme.typography.labelMedium, color = TextSecondary)
-            Spacer(Modifier.height(4.dp))
+        Column(Modifier.padding(16.dp)) {
+            Text(title, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = Color.White.copy(alpha = 0.75f))
+            Spacer(Modifier.height(6.dp))
             Text(value, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = valueColor)
         }
     }

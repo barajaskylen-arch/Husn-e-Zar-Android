@@ -46,7 +46,6 @@ fun ScheduleScreen(
     var selectedDateStr by remember { mutableStateOf(dateFormat.format(Date())) }
     var showAddTaskModal by remember { mutableStateOf(false) }
 
-    // Generate week days (centered around today: 3 days before, today, 3 days after)
     val weekDays = remember {
         val days = mutableListOf<Date>()
         val cal = Calendar.getInstance()
@@ -69,18 +68,16 @@ fun ScheduleScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Daily Schedule", fontWeight = FontWeight.Bold, color = Gold) },
+                title = { Text("Daily Schedule", fontWeight = FontWeight.Bold, color = Yellow) },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = NavyDark,
-                    titleContentColor = Gold,
-                    actionIconContentColor = White
+                    containerColor = DarkBlue,
+                    titleContentColor = Yellow,
+                    actionIconContentColor = Yellow
                 ),
                 actions = {
-                    // Streak Badge in Top Bar
                     Surface(
-                        color = AlertYellowBg,
+                        color = Yellow,
                         shape = RoundedCornerShape(20.dp),
-                        border = BorderStroke(1.dp, Gold),
                         modifier = Modifier.padding(end = 12.dp)
                     ) {
                         Row(
@@ -90,13 +87,13 @@ fun ScheduleScreen(
                             Icon(
                                 Icons.Default.LocalFireDepartment,
                                 contentDescription = "Streak",
-                                tint = GoldLight,
+                                tint = DarkBlue,
                                 modifier = Modifier.size(18.dp)
                             )
                             Spacer(Modifier.width(4.dp))
                             Text(
                                 "$streakCount Days",
-                                color = GoldLight,
+                                color = DarkBlue,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 12.sp
                             )
@@ -108,18 +105,18 @@ fun ScheduleScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { showAddTaskModal = true },
-                containerColor = Gold,
-                contentColor = NavyDark
+                containerColor = Yellow,
+                contentColor = DarkBlue
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Add Task")
             }
         },
-        containerColor = NavyDark
+        containerColor = Color.White
     ) { paddingVals ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .background(NavyDark)
+                .background(Color.White)
                 .padding(paddingVals)
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -128,9 +125,10 @@ fun ScheduleScreen(
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = NavyMedium),
+                    colors = CardDefaults.cardColors(containerColor = DarkBlue),
                     border = BorderStroke(1.dp, CardBorder),
-                    shape = RoundedCornerShape(14.dp)
+                    shape = RoundedCornerShape(20.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
                 ) {
                     Column(Modifier.padding(16.dp)) {
                         Row(
@@ -143,24 +141,25 @@ fun ScheduleScreen(
                                     headerDateFormat.format(Date()),
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
-                                    color = Gold
+                                    color = Yellow
                                 )
                                 Text(
                                     "Best Streak: $bestStreak Days 🔥",
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = TextSecondary
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White.copy(alpha = 0.75f)
                                 )
                             }
                             Surface(
                                 shape = CircleShape,
-                                color = if (streakCount > 0) Gold else NavyLight,
+                                color = if (streakCount > 0) Yellow else DarkBlueDeep,
                                 modifier = Modifier.size(44.dp)
                             ) {
                                 Box(contentAlignment = Alignment.Center) {
                                     Icon(
                                         Icons.Default.Star,
                                         contentDescription = null,
-                                        tint = if (streakCount > 0) NavyDark else TextSecondary,
+                                        tint = if (streakCount > 0) DarkBlue else Yellow,
                                         modifier = Modifier.size(24.dp)
                                     )
                                 }
@@ -191,13 +190,14 @@ fun ScheduleScreen(
                                 .width(56.dp)
                                 .clickable { selectedDateStr = dateKey },
                             colors = CardDefaults.cardColors(
-                                containerColor = if (isSelected) Gold else NavyMedium
+                                containerColor = if (isSelected) Yellow else DarkBlue
                             ),
                             border = BorderStroke(
-                                1.dp,
-                                if (isSelected) Gold else if (isToday) GoldLight else CardBorder
+                                1.5.dp,
+                                if (isSelected) Yellow else if (isToday) Yellow.copy(alpha = 0.6f) else CardBorder
                             ),
-                            shape = RoundedCornerShape(12.dp)
+                            shape = RoundedCornerShape(14.dp),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                         ) {
                             Column(
                                 modifier = Modifier.padding(vertical = 10.dp),
@@ -207,25 +207,25 @@ fun ScheduleScreen(
                                 Text(
                                     text = dayNameFormat.format(dateObj).uppercase(),
                                     fontSize = 11.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = if (isSelected) NavyDark else TextSecondary
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (isSelected) DarkBlue else Color.White.copy(alpha = 0.7f)
                                 )
                                 Spacer(Modifier.height(4.dp))
                                 Text(
                                     text = dayNumberFormat.format(dateObj),
                                     fontSize = 16.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = if (isSelected) NavyDark else White
+                                    color = if (isSelected) DarkBlue else Color.White
                                 )
                                 Spacer(Modifier.height(4.dp))
                                 Box(
                                     modifier = Modifier
                                         .size(6.dp)
                                         .background(
-                                            color = if (allDone) ProfitGreen else if (dayTasks.isNotEmpty()) (if (isSelected) NavyDark else GoldLight) else Color.Transparent,
+                                            color = if (allDone) SuccessGreen else if (dayTasks.isNotEmpty()) (if (isSelected) DarkBlue else Yellow) else Color.Transparent,
                                             shape = CircleShape
                                         )
-                                )
+                                    )
                             }
                         }
                     }
@@ -236,8 +236,9 @@ fun ScheduleScreen(
             item {
                 Card(
                     border = BorderStroke(1.dp, CardBorder),
-                    colors = CardDefaults.cardColors(containerColor = NavyMedium),
-                    shape = RoundedCornerShape(14.dp),
+                    colors = CardDefaults.cardColors(containerColor = DarkBlue),
+                    shape = RoundedCornerShape(20.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(Modifier.padding(16.dp)) {
@@ -250,13 +251,13 @@ fun ScheduleScreen(
                                 "Tasks for $selectedDateStr",
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold,
-                                color = Gold
+                                color = Yellow
                             )
                             Text(
                                 "$completedCount of $totalCount Completed",
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
-                                color = if (completedCount == totalCount && totalCount > 0) ProfitGreen else TextSecondary
+                                color = if (completedCount == totalCount && totalCount > 0) SuccessGreen else Color.White.copy(alpha = 0.75f)
                             )
                         }
                         Spacer(Modifier.height(10.dp))
@@ -265,8 +266,8 @@ fun ScheduleScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(8.dp),
-                            color = if (progressFraction == 1f && totalCount > 0) ProfitGreen else Gold,
-                            trackColor = NavyLight,
+                            color = if (progressFraction == 1f && totalCount > 0) SuccessGreen else Yellow,
+                            trackColor = DarkBlueDeep,
                         )
                     }
                 }
@@ -277,9 +278,10 @@ fun ScheduleScreen(
                 item {
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = NavyMedium),
+                        colors = CardDefaults.cardColors(containerColor = DarkBlue),
                         border = BorderStroke(1.dp, CardBorder),
-                        shape = RoundedCornerShape(14.dp)
+                        shape = RoundedCornerShape(20.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
                     ) {
                         Column(
                             modifier = Modifier
@@ -290,17 +292,18 @@ fun ScheduleScreen(
                             Icon(
                                 Icons.Default.EventAvailable,
                                 contentDescription = null,
-                                tint = TextSecondary,
+                                tint = Yellow,
                                 modifier = Modifier.size(40.dp)
                             )
                             Spacer(Modifier.height(8.dp))
-                            Text("No tasks scheduled for this date.", color = TextSecondary, fontSize = 14.sp)
+                            Text("No tasks scheduled for this date.", color = Color.White.copy(alpha = 0.8f), fontWeight = FontWeight.Bold, fontSize = 14.sp)
                             Spacer(Modifier.height(8.dp))
-                            TextButton(
+                            Button(
                                 onClick = { showAddTaskModal = true },
-                                colors = ButtonDefaults.textButtonColors(contentColor = Gold)
+                                colors = ButtonDefaults.buttonColors(containerColor = Yellow, contentColor = DarkBlue),
+                                shape = RoundedCornerShape(14.dp)
                             ) {
-                                Text("+ Add Task Now")
+                                Text("+ Add Task Now", fontWeight = FontWeight.Bold, color = DarkBlue)
                             }
                         }
                     }
@@ -308,21 +311,21 @@ fun ScheduleScreen(
             } else {
                 items(selectedDateTasks, key = { it.id }) { task ->
                     Card(
-                        border = BorderStroke(1.dp, if (task.isCompleted) NavyBorder else CardBorder),
+                        border = BorderStroke(1.dp, if (task.isCompleted) CardBorder else Yellow.copy(alpha = 0.5f)),
                         colors = CardDefaults.cardColors(
-                            containerColor = if (task.isCompleted) NavyLight.copy(alpha = 0.5f) else NavyMedium
+                            containerColor = DarkBlue
                         ),
-                        shape = RoundedCornerShape(12.dp),
+                        shape = RoundedCornerShape(20.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Row(
                             modifier = Modifier
-                                .padding(14.dp)
+                                .padding(16.dp)
                                 .fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            // Checkbox icon
                             IconButton(
                                 onClick = { appViewModel.updateDailyTaskCompleted(task, !task.isCompleted) },
                                 modifier = Modifier.size(36.dp)
@@ -330,7 +333,7 @@ fun ScheduleScreen(
                                 Icon(
                                     imageVector = if (task.isCompleted) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
                                     contentDescription = if (task.isCompleted) "Completed" else "Incomplete",
-                                    tint = if (task.isCompleted) ProfitGreen else Gold,
+                                    tint = if (task.isCompleted) SuccessGreen else Yellow,
                                     modifier = Modifier.size(24.dp)
                                 )
                             }
@@ -338,9 +341,9 @@ fun ScheduleScreen(
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     text = task.taskName,
-                                    fontWeight = FontWeight.SemiBold,
+                                    fontWeight = FontWeight.Bold,
                                     style = MaterialTheme.typography.bodyLarge,
-                                    color = if (task.isCompleted) TextSecondary else White,
+                                    color = if (task.isCompleted) Color.White.copy(alpha = 0.5f) else Color.White,
                                     textDecoration = if (task.isCompleted) TextDecoration.LineThrough else TextDecoration.None
                                 )
                                 if (task.description.isNotBlank()) {
@@ -348,7 +351,8 @@ fun ScheduleScreen(
                                     Text(
                                         task.description,
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = TextSecondary,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (task.isCompleted) Color.White.copy(alpha = 0.4f) else Color.White.copy(alpha = 0.7f),
                                         textDecoration = if (task.isCompleted) TextDecoration.LineThrough else TextDecoration.None
                                     )
                                 }
@@ -360,7 +364,7 @@ fun ScheduleScreen(
                                 Icon(
                                     Icons.Default.DeleteOutline,
                                     contentDescription = "Delete Task",
-                                    tint = ExpenseRed.copy(alpha = 0.8f),
+                                    tint = AlertRed,
                                     modifier = Modifier.size(20.dp)
                                 )
                             }

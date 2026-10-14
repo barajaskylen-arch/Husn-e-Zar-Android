@@ -29,20 +29,19 @@ data class DashboardState(
     val todayOutgoingExpense: Double = 0.0,
     val todayExpectedRemainingBalance: Double = 0.0,
 
-    // 3 Months trend
-    val historicalTrends: List<MonthTrend> = emptyList(),
+    // Last 6 Months report
+    val historicalTrends: List<MonthReport> = emptyList(),
 
     // Weekly Credit Alert List
     val weeklyCreditAlerts: List<CreditAlert> = emptyList()
 )
 
-data class MonthTrend(
-    val monthName: String,
-    val totalSale: Double,
-    val netProfit: Double,
+data class MonthReport(
+    val monthLabel: String,
+    val jarsCreated: Int,
     val totalExpense: Double,
-    val jarsSold: Int,
-    val newCustomers: Int
+    val totalSale: Double,
+    val totalRevenue: Double
 )
 
 data class CreditAlert(
@@ -156,11 +155,30 @@ class DashboardViewModel(private val appViewModel: AppViewModel) : ViewModel() {
         val todayOutgoingExpense = todayExpenses.sumOf { it.amount }
         val todayExpectedRemainingBalance = todayOrders.sumOf { it.pendingAmount }
 
-        // Trends (simplified, let's just do last 3 months based on current month)
-        // Would need a proper calendar subtract in real logic
-        val trends = listOf(
-            MonthTrend(displayMonthFormat.format(Date()), currentMonthTotalSales, currentMonthNetProfit, currentMonthTotalExpense, currentMonthJarsSold, currentMonthNewCustomers)
-        )
+        // Last 6 Months Report (current month included, newest on top)
+        val reports = mutableListOf<MonthReport>()
+        for (i in 0 until 6) {
+            val cal = Calendar.getInstance()
+            cal.add(Calendar.MONTH, -i)
+            val monthKey = monthFormat.format(cal.time)
+            val monthLabel = displayMonthFormat.format(cal.time)
+            val jarsCreated = batches.filter { it.date.startsWith(monthKey) }.sumOf { it.jarsProduced }
+            val mExpenses = expenses.filter { it.date.startsWith(monthKey) }.sumOf { it.amount }
+            val mOrders = orders.filter { it.orderDate.startsWith(monthKey) }
+            val mSales = mOrders.sumOf { it.totalAmount }
+            val mPayments = payments.filter { it.date.startsWith(monthKey) }.sumOf { it.amount }
+            val mRevenue = mOrders.sumOf { it.paidAmount } + mPayments
+
+            reports.add(
+                MonthReport(
+                    monthLabel = monthLabel,
+                    jarsCreated = jarsCreated,
+                    totalExpense = mExpenses,
+                    totalSale = mSales,
+                    totalRevenue = mRevenue
+                )
+            )
+        }
 
         // Weekly credit alerts (unpaid orders)
         val alerts = orders.filter { it.pendingAmount > 0 }.sortedBy { it.dueDate }.take(10).map {
@@ -185,7 +203,7 @@ class DashboardViewModel(private val appViewModel: AppViewModel) : ViewModel() {
             todayJarsSoldAmount = todayJarsSoldAmount,
             todayOutgoingExpense = todayOutgoingExpense,
             todayExpectedRemainingBalance = todayExpectedRemainingBalance,
-            historicalTrends = trends,
+            historicalTrends = reports,
             weeklyCreditAlerts = alerts
         )
     }

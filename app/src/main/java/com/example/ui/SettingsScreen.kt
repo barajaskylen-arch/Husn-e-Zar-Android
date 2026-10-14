@@ -70,7 +70,7 @@ fun SettingsScreen(
     var showImportConfirmDialog by remember { mutableStateOf(false) }
     var pendingImportJson by remember { mutableStateOf<String?>(null) }
 
-    var snackbarColor by remember { mutableStateOf(ProfitGreen) }
+    var snackbarColor by remember { mutableStateOf(SuccessGreen) }
 
     val filePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
@@ -85,13 +85,13 @@ fun SettingsScreen(
                     showImportConfirmDialog = true
                 } else {
                     scope.launch {
-                        snackbarColor = ExpenseRed
+                        snackbarColor = AlertRed
                         snackbarHostState.showSnackbar("❌ File khali ya invalid hai")
                     }
                 }
             } catch (e: Exception) {
                 scope.launch {
-                    snackbarColor = ExpenseRed
+                    snackbarColor = AlertRed
                     snackbarHostState.showSnackbar("❌ File read nahi ho saki")
                 }
             }
@@ -101,10 +101,10 @@ fun SettingsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Settings", fontWeight = FontWeight.Bold, color = Gold) },
+                title = { Text("Settings", fontWeight = FontWeight.Bold, color = Yellow) },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = NavyDark,
-                    titleContentColor = Gold
+                    containerColor = DarkBlue,
+                    titleContentColor = Yellow
                 )
             )
         },
@@ -112,17 +112,17 @@ fun SettingsScreen(
             SnackbarHost(snackbarHostState) { data ->
                 Snackbar(
                     containerColor = snackbarColor,
-                    contentColor = White,
+                    contentColor = Color.White,
                     snackbarData = data
                 )
             }
         },
-        containerColor = NavyDark
+        containerColor = Color.White
     ) { paddingVals ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .background(NavyDark)
+                .background(Color.White)
                 .padding(paddingVals)
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -131,14 +131,15 @@ fun SettingsScreen(
             item {
                 Card(
                     border = BorderStroke(1.dp, CardBorder),
-                    colors = CardDefaults.cardColors(containerColor = NavyMedium),
-                    shape = RoundedCornerShape(14.dp),
+                    colors = CardDefaults.cardColors(containerColor = DarkBlue),
+                    shape = RoundedCornerShape(20.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(Modifier.padding(16.dp)) {
                         Text(
                             text = "App Info",
-                            color = Gold,
+                            color = Yellow,
                             fontWeight = FontWeight.Bold,
                             style = MaterialTheme.typography.titleMedium
                         )
@@ -148,7 +149,7 @@ fun SettingsScreen(
                         InfoRow(label = "Version", value = "1.0.0")
                         HorizontalDivider(
                             modifier = Modifier.padding(vertical = 10.dp),
-                            color = NavyBorder
+                            color = CardBorder
                         )
                         InfoRow(label = "Total Customers", value = "${customers.size}")
                         Spacer(Modifier.height(6.dp))
@@ -165,8 +166,9 @@ fun SettingsScreen(
             item {
                 Card(
                     border = BorderStroke(1.dp, CardBorder),
-                    colors = CardDefaults.cardColors(containerColor = NavyMedium),
-                    shape = RoundedCornerShape(14.dp),
+                    colors = CardDefaults.cardColors(containerColor = DarkBlue),
+                    shape = RoundedCornerShape(20.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(Modifier.padding(16.dp)) {
@@ -177,13 +179,13 @@ fun SettingsScreen(
                         ) {
                             Text(
                                 text = "Cloud Sync (Supabase)",
-                                color = Gold,
+                                color = Yellow,
                                 fontWeight = FontWeight.Bold,
                                 style = MaterialTheme.typography.titleMedium
                             )
                             if (isSyncing) {
                                 CircularProgressIndicator(
-                                    color = Gold,
+                                    color = Yellow,
                                     modifier = Modifier.size(18.dp),
                                     strokeWidth = 2.dp
                                 )
@@ -211,13 +213,13 @@ fun SettingsScreen(
                                     appViewModel.syncNow { result ->
                                         result.fold(
                                             onSuccess = {
-                                                snackbarColor = ProfitGreen
+                                                snackbarColor = SuccessGreen
                                                 scope.launch {
                                                     snackbarHostState.showSnackbar("✅ Supabase sync mukammal ho gaya")
                                                 }
                                             },
                                             onFailure = { ex ->
-                                                snackbarColor = ExpenseRed
+                                                snackbarColor = AlertRed
                                                 scope.launch {
                                                     snackbarHostState.showSnackbar("❌ Sync fail: ${ex.localizedMessage ?: "Network masla"}")
                                                 }
@@ -228,24 +230,26 @@ fun SettingsScreen(
                             },
                             enabled = !isSyncing,
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = Gold,
-                                contentColor = NavyDark,
-                                disabledContainerColor = Gold.copy(alpha = 0.4f),
-                                disabledContentColor = NavyDark.copy(alpha = 0.5f)
+                                containerColor = Yellow,
+                                contentColor = DarkBlue,
+                                disabledContainerColor = Yellow.copy(alpha = 0.4f),
+                                disabledContentColor = DarkBlue.copy(alpha = 0.5f)
                             ),
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.fillMaxWidth()
+                            shape = RoundedCornerShape(14.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(52.dp)
                         ) {
                             if (isSyncing) {
                                 CircularProgressIndicator(
-                                    color = NavyDark,
-                                    modifier = Modifier.size(18.dp),
+                                    color = DarkBlue,
+                                    modifier = Modifier.size(20.dp),
                                     strokeWidth = 2.dp
                                 )
                                 Spacer(Modifier.width(8.dp))
-                                Text("Sync ho raha hai...", fontWeight = FontWeight.Bold)
+                                Text("Sync ho raha hai...", fontWeight = FontWeight.Bold, color = DarkBlue)
                             } else {
-                                Text("🔄 Sync Now", fontWeight = FontWeight.Bold)
+                                Text("🔄 Sync Now", fontWeight = FontWeight.Bold, color = DarkBlue)
                             }
                         }
 
@@ -254,14 +258,16 @@ fun SettingsScreen(
                         // Button 2: Logout
                         OutlinedButton(
                             onClick = { showLogoutConfirmDialog = true },
-                            border = BorderStroke(1.dp, ExpenseRed),
+                            border = BorderStroke(2.dp, AlertRed),
                             colors = ButtonDefaults.outlinedButtonColors(
-                                contentColor = ExpenseRed
+                                contentColor = AlertRed
                             ),
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.fillMaxWidth()
+                            shape = RoundedCornerShape(14.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(52.dp)
                         ) {
-                            Text("🚪 Logout", fontWeight = FontWeight.Bold)
+                            Text("🚪 Logout", fontWeight = FontWeight.Bold, color = AlertRed)
                         }
                     }
                 }
@@ -271,14 +277,15 @@ fun SettingsScreen(
             item {
                 Card(
                     border = BorderStroke(1.dp, CardBorder),
-                    colors = CardDefaults.cardColors(containerColor = NavyMedium),
-                    shape = RoundedCornerShape(14.dp),
+                    colors = CardDefaults.cardColors(containerColor = DarkBlue),
+                    shape = RoundedCornerShape(20.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(Modifier.padding(16.dp)) {
                         Text(
                             text = "Backup & Restore",
-                            color = Gold,
+                            color = Yellow,
                             fontWeight = FontWeight.Bold,
                             style = MaterialTheme.typography.titleMedium
                         )
@@ -298,7 +305,6 @@ fun SettingsScreen(
 
                                         val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
                                         val backup = BackupPayload(
-                                            version = "1.0",
                                             exportDate = today,
                                             customers = custs,
                                             orders = ords,
@@ -310,30 +316,32 @@ fun SettingsScreen(
 
                                         val gson = GsonBuilder().setPrettyPrinting().create()
                                         val jsonString = gson.toJson(backup)
-                                        val filename = "HusnEZar_Backup_$today.json"
 
+                                        val filename = "husn_e_zar_backup_$today.json"
                                         val success = saveJsonToDownloads(context, filename, jsonString)
                                         if (success) {
-                                            snackbarColor = ProfitGreen
-                                            snackbarHostState.showSnackbar("✅ Backup save ho gaya Downloads mein!")
+                                            snackbarColor = SuccessGreen
+                                            snackbarHostState.showSnackbar("✅ Backup file save ho gayi Downloads folder mein: $filename")
                                         } else {
-                                            snackbarColor = ExpenseRed
-                                            snackbarHostState.showSnackbar("❌ Backup save karne mein error aaya")
+                                            snackbarColor = AlertRed
+                                            snackbarHostState.showSnackbar("❌ File save nahi ho saki")
                                         }
                                     } catch (e: Exception) {
-                                        snackbarColor = ExpenseRed
-                                        snackbarHostState.showSnackbar("❌ Error: ${e.localizedMessage}")
+                                        snackbarColor = AlertRed
+                                        snackbarHostState.showSnackbar("❌ Export masla: ${e.message}")
                                     }
                                 }
                             },
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = Gold,
-                                contentColor = NavyDark
+                                containerColor = Yellow,
+                                contentColor = DarkBlue
                             ),
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.fillMaxWidth()
+                            shape = RoundedCornerShape(14.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(52.dp)
                         ) {
-                            Text("📤 Data Export Karo", fontWeight = FontWeight.Bold)
+                            Text("📤 Data Export Karo", fontWeight = FontWeight.Bold, color = DarkBlue)
                         }
 
                         Spacer(Modifier.height(10.dp))
@@ -341,72 +349,59 @@ fun SettingsScreen(
                         // Button 2: Import Data
                         OutlinedButton(
                             onClick = {
-                                filePickerLauncher.launch(arrayOf("application/json", "text/*", "*/*"))
+                                filePickerLauncher.launch(arrayOf("application/json", "*/*"))
                             },
-                            border = BorderStroke(1.dp, Gold),
+                            border = BorderStroke(2.dp, Yellow),
                             colors = ButtonDefaults.outlinedButtonColors(
-                                contentColor = Gold
+                                contentColor = Yellow
                             ),
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.fillMaxWidth()
+                            shape = RoundedCornerShape(14.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(52.dp)
                         ) {
-                            Text("📥 Data Import Karo", fontWeight = FontWeight.Bold)
+                            Text("📥 Data Import Karo", fontWeight = FontWeight.Bold, color = Yellow)
                         }
-                    }
-                }
-            }
 
-            // DANGER ZONE CARD
-            item {
-                Card(
-                    border = BorderStroke(1.dp, ExpenseRed),
-                    colors = CardDefaults.cardColors(containerColor = AlertRedBg),
-                    shape = RoundedCornerShape(14.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Column(Modifier.padding(16.dp)) {
-                        Text(
-                            text = "Danger Zone",
-                            color = ExpenseRed,
-                            fontWeight = FontWeight.Bold,
-                            style = MaterialTheme.typography.titleMedium
-                        )
                         Spacer(Modifier.height(16.dp))
 
-                        OutlinedButton(
+                        // Button 3: Clear All Data
+                        Button(
                             onClick = {
                                 deleteConfirmText = ""
                                 showDeleteConfirmDialog = true
                             },
-                            border = BorderStroke(1.dp, ExpenseRed),
-                            colors = ButtonDefaults.outlinedButtonColors(
-                                contentColor = ExpenseRed
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = AlertRedBg,
+                                contentColor = AlertRed
                             ),
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.fillMaxWidth()
+                            border = BorderStroke(1.5.dp, AlertRed),
+                            shape = RoundedCornerShape(14.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(52.dp)
                         ) {
-                            Text("🗑️ Saara Data Delete Karo", fontWeight = FontWeight.Bold)
+                            Text("🗑️ Saara Data Delete Karo", fontWeight = FontWeight.Bold, color = AlertRed)
                         }
                     }
                 }
             }
 
-            item {
-                Spacer(Modifier.height(80.dp))
-            }
+            item { Spacer(Modifier.height(80.dp)) }
         }
 
-        // Overwrite Warning Dialog for Import
+        // Import Confirmation Dialog
         if (showImportConfirmDialog && pendingImportJson != null) {
             AlertDialog(
                 onDismissRequest = {
                     showImportConfirmDialog = false
                     pendingImportJson = null
                 },
-                containerColor = NavyMedium,
-                title = { Text("⚠️ Data Overwrite Hoga", fontWeight = FontWeight.Bold, color = ExpenseRed) },
+                containerColor = DarkBlue,
+                shape = RoundedCornerShape(20.dp),
+                title = { Text("⚠️ Data Overwrite Hoga", fontWeight = FontWeight.Bold, color = AlertRed) },
                 text = {
-                    Text("Import karne se aapka maujuda data delete ho jayega. Kya sure hain?", color = White)
+                    Text("Import karne se aapka maujuda data delete ho jayega. Kya sure hain?", color = Color.White, fontWeight = FontWeight.Bold)
                 },
                 confirmButton = {
                     Button(
@@ -425,7 +420,7 @@ fun SettingsScreen(
                                         val hasOrders = jsonObject.has("orders")
 
                                         if (!hasVersion || !hasCustomers || !hasOrders) {
-                                            snackbarColor = ExpenseRed
+                                            snackbarColor = AlertRed
                                             snackbarHostState.showSnackbar("❌ File invalid hai")
                                             return@launch
                                         }
@@ -453,22 +448,22 @@ fun SettingsScreen(
                                             tasksList
                                         )
 
-                                        snackbarColor = ProfitGreen
+                                        snackbarColor = SuccessGreen
                                         snackbarHostState.showSnackbar("✅ Data import ho gaya!")
                                     } catch (e: Exception) {
-                                        snackbarColor = ExpenseRed
+                                        snackbarColor = AlertRed
                                         snackbarHostState.showSnackbar("❌ File invalid hai")
                                     }
                                 }
                             }
                         },
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = ExpenseRed,
-                            contentColor = White
+                            containerColor = AlertRed,
+                            contentColor = Color.White
                         ),
-                        shape = RoundedCornerShape(10.dp)
+                        shape = RoundedCornerShape(14.dp)
                     ) {
-                        Text("Import Karo")
+                        Text("Import Karo", fontWeight = FontWeight.Bold)
                     }
                 },
                 dismissButton = {
@@ -477,11 +472,11 @@ fun SettingsScreen(
                             showImportConfirmDialog = false
                             pendingImportJson = null
                         },
-                        border = BorderStroke(1.dp, NavyBorder),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = TextSecondary),
-                        shape = RoundedCornerShape(10.dp)
+                        border = BorderStroke(2.dp, Yellow),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Yellow),
+                        shape = RoundedCornerShape(14.dp)
                     ) {
-                        Text("Cancel")
+                        Text("Cancel", fontWeight = FontWeight.Bold, color = Yellow)
                     }
                 }
             )
@@ -491,17 +486,18 @@ fun SettingsScreen(
         if (showDeleteConfirmDialog) {
             AlertDialog(
                 onDismissRequest = { showDeleteConfirmDialog = false },
-                containerColor = NavyMedium,
-                title = { Text("⚠️ Saara Data Delete Hoga", fontWeight = FontWeight.Bold, color = ExpenseRed) },
+                containerColor = DarkBlue,
+                shape = RoundedCornerShape(20.dp),
+                title = { Text("⚠️ Saara Data Delete Hoga", fontWeight = FontWeight.Bold, color = AlertRed) },
                 text = {
                     Column {
-                        Text("Yeh action undo nahi ho sakta. Saare customers, orders, payments, inventory aur expenses delete honge.", color = White)
+                        Text("Yeh action undo nahi ho sakta. Saare customers, orders, payments, inventory aur expenses delete honge.", color = Color.White, fontWeight = FontWeight.Bold)
                         Spacer(Modifier.height(12.dp))
                         OutlinedTextField(
                             value = deleteConfirmText,
                             onValueChange = { deleteConfirmText = it },
-                            placeholder = { Text("DELETE likho confirm k liye", color = TextSecondary) },
-                            shape = RoundedCornerShape(10.dp),
+                            placeholder = { Text("DELETE likho confirm k liye", color = DarkBlue.copy(alpha = 0.6f), fontWeight = FontWeight.Bold) },
+                            shape = RoundedCornerShape(14.dp),
                             modifier = Modifier.fillMaxWidth(),
                             colors = standardTextFieldColors()
                         )
@@ -513,30 +509,30 @@ fun SettingsScreen(
                             showDeleteConfirmDialog = false
                             scope.launch {
                                 appViewModel.clearAllTables()
-                                snackbarColor = ProfitGreen
+                                snackbarColor = SuccessGreen
                                 snackbarHostState.showSnackbar("✅ Saara data delete ho gaya")
                             }
                         },
                         enabled = deleteConfirmText == "DELETE",
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = ExpenseRed,
-                            contentColor = White,
-                            disabledContainerColor = AlertRedBg,
-                            disabledContentColor = TextSecondary
+                            containerColor = AlertRed,
+                            contentColor = Color.White,
+                            disabledContainerColor = AlertRed.copy(alpha = 0.4f),
+                            disabledContentColor = Color.White.copy(alpha = 0.4f)
                         ),
-                        shape = RoundedCornerShape(10.dp)
+                        shape = RoundedCornerShape(14.dp)
                     ) {
-                        Text("Haan, Delete Karo")
+                        Text("Haan, Delete Karo", fontWeight = FontWeight.Bold)
                     }
                 },
                 dismissButton = {
                     OutlinedButton(
                         onClick = { showDeleteConfirmDialog = false },
-                        border = BorderStroke(1.dp, NavyBorder),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = TextSecondary),
-                        shape = RoundedCornerShape(10.dp)
+                        border = BorderStroke(2.dp, Yellow),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Yellow),
+                        shape = RoundedCornerShape(14.dp)
                     ) {
-                        Text("Cancel")
+                        Text("Cancel", fontWeight = FontWeight.Bold, color = Yellow)
                     }
                 }
             )
@@ -546,10 +542,11 @@ fun SettingsScreen(
         if (showLogoutConfirmDialog) {
             AlertDialog(
                 onDismissRequest = { showLogoutConfirmDialog = false },
-                containerColor = NavyMedium,
-                title = { Text("Logout Karein?", fontWeight = FontWeight.Bold, color = Gold) },
+                containerColor = DarkBlue,
+                shape = RoundedCornerShape(20.dp),
+                title = { Text("Logout Karein?", fontWeight = FontWeight.Bold, color = Yellow) },
                 text = {
-                    Text("Aap session se logout ho jayenge. Local data cache mein mehfooz rahega.", color = White)
+                    Text("Aap session se logout ho jayenge. Local data cache mein mehfooz rahega.", color = Color.White, fontWeight = FontWeight.Bold)
                 },
                 confirmButton = {
                     Button(
@@ -558,22 +555,22 @@ fun SettingsScreen(
                             appViewModel.logout()
                         },
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = ExpenseRed,
-                            contentColor = White
+                            containerColor = AlertRed,
+                            contentColor = Color.White
                         ),
-                        shape = RoundedCornerShape(10.dp)
+                        shape = RoundedCornerShape(14.dp)
                     ) {
-                        Text("Logout")
+                        Text("Logout", fontWeight = FontWeight.Bold)
                     }
                 },
                 dismissButton = {
                     OutlinedButton(
                         onClick = { showLogoutConfirmDialog = false },
-                        border = BorderStroke(1.dp, NavyBorder),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = TextSecondary),
-                        shape = RoundedCornerShape(10.dp)
+                        border = BorderStroke(2.dp, Yellow),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Yellow),
+                        shape = RoundedCornerShape(14.dp)
                     ) {
-                        Text("Cancel")
+                        Text("Cancel", fontWeight = FontWeight.Bold, color = Yellow)
                     }
                 }
             )
@@ -588,8 +585,8 @@ private fun InfoRow(label: String, value: String) {
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(text = label, color = TextSecondary, style = MaterialTheme.typography.bodyMedium)
-        Text(text = value, color = White, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
+        Text(text = label, color = Color.White.copy(alpha = 0.8f), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
+        Text(text = value, color = Color.White, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
     }
 }
 

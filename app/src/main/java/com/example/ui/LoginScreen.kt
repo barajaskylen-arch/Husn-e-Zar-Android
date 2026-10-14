@@ -17,6 +17,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
@@ -50,7 +51,7 @@ fun LoginScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(NavyDark)
+            .background(Color.White)
             .padding(24.dp),
         contentAlignment = Alignment.Center
     ) {
@@ -59,9 +60,10 @@ fun LoginScreen(
                 .fillMaxWidth()
                 .widthIn(max = 480.dp)
                 .testTag("login_card"),
-            colors = CardDefaults.cardColors(containerColor = NavyMedium),
+            colors = CardDefaults.cardColors(containerColor = DarkBlue),
             border = BorderStroke(1.dp, CardBorder),
-            shape = RoundedCornerShape(20.dp)
+            shape = RoundedCornerShape(20.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
         ) {
             Column(
                 modifier = Modifier
@@ -71,7 +73,7 @@ fun LoginScreen(
             ) {
                 Text(
                     text = "Husn e Zar",
-                    color = Gold,
+                    color = Yellow,
                     fontSize = 28.sp,
                     fontWeight = FontWeight.Bold,
                     letterSpacing = 1.sp,
@@ -80,8 +82,9 @@ fun LoginScreen(
 
                 Text(
                     text = "Admin Portal & Cloud Sync",
-                    color = TextSecondary,
+                    color = Color.White.copy(alpha = 0.85f),
                     fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(top = 4.dp, bottom = 24.dp),
                     textAlign = TextAlign.Center
                 )
@@ -92,7 +95,8 @@ fun LoginScreen(
                             .fillMaxWidth()
                             .padding(bottom = 16.dp),
                         colors = CardDefaults.cardColors(containerColor = AlertYellowBg),
-                        border = BorderStroke(1.dp, Gold)
+                        border = BorderStroke(1.dp, Yellow),
+                        shape = RoundedCornerShape(12.dp)
                     ) {
                         Row(
                             modifier = Modifier.padding(12.dp),
@@ -101,13 +105,14 @@ fun LoginScreen(
                             Icon(
                                 imageVector = Icons.Default.Warning,
                                 contentDescription = "Config Warning",
-                                tint = Gold,
+                                tint = YellowDeep,
                                 modifier = Modifier.size(20.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
                                 text = "Supabase URL aur Anon Key configure nahi hain. AI Studio Secrets panel mein SUPABASE_URL aur SUPABASE_ANON_KEY add karein.",
-                                color = GoldLight,
+                                color = DarkBlue,
+                                fontWeight = FontWeight.Bold,
                                 fontSize = 11.sp,
                                 lineHeight = 15.sp
                             )
@@ -121,7 +126,8 @@ fun LoginScreen(
                             .fillMaxWidth()
                             .padding(bottom = 16.dp),
                         colors = CardDefaults.cardColors(containerColor = AlertRedBg),
-                        border = BorderStroke(1.dp, ExpenseRed)
+                        border = BorderStroke(1.dp, AlertRed),
+                        shape = RoundedCornerShape(12.dp)
                     ) {
                         Row(
                             modifier = Modifier.padding(12.dp),
@@ -130,13 +136,14 @@ fun LoginScreen(
                             Icon(
                                 imageVector = Icons.Default.Warning,
                                 contentDescription = "Error",
-                                tint = ExpenseRed,
+                                tint = AlertRed,
                                 modifier = Modifier.size(18.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
                                 text = errorMessage ?: "",
-                                color = ExpenseRed,
+                                color = AlertRed,
+                                fontWeight = FontWeight.Bold,
                                 fontSize = 12.sp,
                                 lineHeight = 16.sp
                             )
@@ -150,19 +157,19 @@ fun LoginScreen(
                         email = it
                         errorMessage = null
                     },
-                    label = { Text("Admin Email", color = TextSecondary) },
-                    placeholder = { Text("admin@husnezar.com", color = TextSecondary.copy(alpha = 0.5f)) },
+                    label = { Text("Admin Email", color = DarkBlue, fontWeight = FontWeight.Bold) },
+                    placeholder = { Text("admin@husnezar.com", color = DarkBlue.copy(alpha = 0.5f), fontWeight = FontWeight.Bold) },
                     leadingIcon = {
                         Icon(
                             imageVector = Icons.Default.Email,
                             contentDescription = "Email Icon",
-                            tint = Gold
+                            tint = DarkBlue
                         )
                     },
                     modifier = Modifier
                         .fillMaxWidth()
                         .testTag("login_email_input"),
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(14.dp),
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Email,
@@ -182,13 +189,13 @@ fun LoginScreen(
                         password = it
                         errorMessage = null
                     },
-                    label = { Text("Password", color = TextSecondary) },
-                    placeholder = { Text("••••••••", color = TextSecondary.copy(alpha = 0.5f)) },
+                    label = { Text("Password", color = DarkBlue, fontWeight = FontWeight.Bold) },
+                    placeholder = { Text("••••••••", color = DarkBlue.copy(alpha = 0.5f), fontWeight = FontWeight.Bold) },
                     leadingIcon = {
                         Icon(
                             imageVector = Icons.Default.Lock,
                             contentDescription = "Password Icon",
-                            tint = Gold
+                            tint = DarkBlue
                         )
                     },
                     trailingIcon = {
@@ -196,7 +203,7 @@ fun LoginScreen(
                             Icon(
                                 imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
                                 contentDescription = if (passwordVisible) "Hide Password" else "Show Password",
-                                tint = TextSecondary
+                                tint = DarkBlue
                             )
                         }
                     },
@@ -204,7 +211,7 @@ fun LoginScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .testTag("login_password_input"),
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(14.dp),
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Password,
@@ -251,19 +258,19 @@ fun LoginScreen(
                     enabled = !isLoading,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(50.dp)
+                        .height(52.dp)
                         .testTag("login_submit_button"),
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(14.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Gold,
-                        contentColor = NavyDark,
-                        disabledContainerColor = Gold.copy(alpha = 0.4f),
-                        disabledContentColor = NavyDark.copy(alpha = 0.5f)
+                        containerColor = Yellow,
+                        contentColor = DarkBlue,
+                        disabledContainerColor = Yellow.copy(alpha = 0.4f),
+                        disabledContentColor = DarkBlue.copy(alpha = 0.5f)
                     )
                 ) {
                     if (isLoading) {
                         CircularProgressIndicator(
-                            color = NavyDark,
+                            color = DarkBlue,
                             modifier = Modifier.size(22.dp),
                             strokeWidth = 2.5.dp
                         )
@@ -272,14 +279,14 @@ fun LoginScreen(
                             text = "Login ho raha hai...",
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Bold,
-                            color = NavyDark
+                            color = DarkBlue
                         )
                     } else {
                         Text(
                             text = "Login Karein",
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Bold,
-                            color = NavyDark
+                            color = DarkBlue
                         )
                     }
                 }

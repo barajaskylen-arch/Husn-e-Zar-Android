@@ -33,7 +33,6 @@ fun PricingScreen(
     var targetPercent by remember { mutableStateOf(40f) }
     var bulkJars by remember { mutableStateOf("") }
 
-    // Initialize custom cost input with liveCostPerJar if empty
     LaunchedEffect(liveCostPerJar) {
         if (costPerJarInput.isEmpty() && liveCostPerJar > 0) {
             costPerJarInput = String.format(java.util.Locale.US, "%.2f", liveCostPerJar)
@@ -44,7 +43,6 @@ fun PricingScreen(
     val profitAmount = costPerJar * (targetPercent / 100)
     val sellingPrice = costPerJar + profitAmount
 
-    // Bulk calculations
     val jars = bulkJars.toIntOrNull() ?: 0
     val totalCost = costPerJar * jars
     val totalRevenue = sellingPrice * jars
@@ -54,25 +52,25 @@ fun PricingScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Price Calculator", fontWeight = FontWeight.Bold, color = Gold) },
+                title = { Text("Price Calculator", fontWeight = FontWeight.Bold, color = Yellow) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = White)
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Yellow)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = NavyDark,
-                    titleContentColor = Gold,
-                    navigationIconContentColor = White
+                    containerColor = DarkBlue,
+                    titleContentColor = Yellow,
+                    navigationIconContentColor = Yellow
                 )
             )
         },
-        containerColor = NavyDark
+        containerColor = Color.White
     ) { paddingVals ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .background(NavyDark)
+                .background(Color.White)
                 .padding(paddingVals)
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -81,15 +79,17 @@ fun PricingScreen(
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = NavyMedium),
-                    border = BorderStroke(1.dp, NavyBorder),
-                    shape = RoundedCornerShape(14.dp)
+                    colors = CardDefaults.cardColors(containerColor = DarkBlue),
+                    border = BorderStroke(1.dp, CardBorder),
+                    shape = RoundedCornerShape(20.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
                 ) {
                     Column(Modifier.padding(16.dp)) {
                         Text(
                             text = "Live Inventory Baseline",
                             style = MaterialTheme.typography.labelMedium,
-                            color = TextSecondary
+                            fontWeight = FontWeight.Bold,
+                            color = Yellow
                         )
                         Spacer(Modifier.height(8.dp))
                         Row(
@@ -98,21 +98,21 @@ fun PricingScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Column {
-                                Text("Current Cost Per Jar", color = TextSecondary, fontSize = 12.sp)
+                                Text("Current Cost Per Jar", color = Color.White.copy(alpha = 0.75f), fontWeight = FontWeight.Bold, fontSize = 12.sp)
                                 Text(
                                     formatMoneyDetailed(liveCostPerJar),
                                     style = MaterialTheme.typography.titleLarge,
                                     fontWeight = FontWeight.Bold,
-                                    color = GoldLight
+                                    color = Color.White
                                 )
                             }
                             Column(horizontalAlignment = Alignment.End) {
-                                Text("Current Stock", color = TextSecondary, fontSize = 12.sp)
+                                Text("Current Stock", color = Color.White.copy(alpha = 0.75f), fontWeight = FontWeight.Bold, fontSize = 12.sp)
                                 Text(
                                     "$availableStock jars",
                                     style = MaterialTheme.typography.titleLarge,
                                     fontWeight = FontWeight.Bold,
-                                    color = if (availableStock > 10) ProfitGreen else ExpenseRed
+                                    color = if (availableStock > 10) SuccessGreen else AlertRed
                                 )
                             }
                         }
@@ -124,25 +124,26 @@ fun PricingScreen(
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = NavyMedium),
+                    colors = CardDefaults.cardColors(containerColor = DarkBlue),
                     border = BorderStroke(1.dp, CardBorder),
-                    shape = RoundedCornerShape(14.dp)
+                    shape = RoundedCornerShape(20.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
                 ) {
                     Column(Modifier.padding(16.dp)) {
                         Text(
                             "Target Profit Calculate Karo",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = Gold
+                            color = Yellow
                         )
                         Spacer(Modifier.height(14.dp))
 
                         OutlinedTextField(
                             value = costPerJarInput,
                             onValueChange = { costPerJarInput = it },
-                            label = { Text("Cost Per Jar (PKR)") },
+                            label = { Text("Cost Per Jar (PKR)", fontWeight = FontWeight.Bold) },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                            shape = RoundedCornerShape(12.dp),
+                            shape = RoundedCornerShape(14.dp),
                             modifier = Modifier.fillMaxWidth(),
                             colors = standardTextFieldColors()
                         )
@@ -153,10 +154,10 @@ fun PricingScreen(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text("Target Profit %", color = TextSecondary, style = MaterialTheme.typography.bodyMedium)
+                            Text("Target Profit %", color = Color.White.copy(alpha = 0.8f), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
                             Text(
                                 "${targetPercent.toInt()}% Profit",
-                                color = Gold,
+                                color = Yellow,
                                 fontWeight = FontWeight.Bold,
                                 style = MaterialTheme.typography.titleMedium
                             )
@@ -167,9 +168,9 @@ fun PricingScreen(
                             onValueChange = { targetPercent = it },
                             valueRange = 10f..100f,
                             colors = SliderDefaults.colors(
-                                thumbColor = Gold,
-                                activeTrackColor = Gold,
-                                inactiveTrackColor = NavyLight
+                                thumbColor = Yellow,
+                                activeTrackColor = Yellow,
+                                inactiveTrackColor = DarkBlueDeep
                             ),
                             modifier = Modifier.fillMaxWidth()
                         )
@@ -184,55 +185,55 @@ fun PricingScreen(
                                 val isSelected = targetPercent.toInt() == preset.toInt()
                                 OutlinedButton(
                                     onClick = { targetPercent = preset },
-                                    border = BorderStroke(1.dp, if (isSelected) Gold else NavyBorder),
+                                    border = BorderStroke(1.5.dp, if (isSelected) Yellow else Color.White.copy(alpha = 0.4f)),
                                     colors = ButtonDefaults.outlinedButtonColors(
-                                        containerColor = if (isSelected) Gold.copy(alpha = 0.15f) else Color.Transparent,
-                                        contentColor = if (isSelected) Gold else TextSecondary
+                                        containerColor = if (isSelected) Yellow else Color.Transparent,
+                                        contentColor = if (isSelected) DarkBlue else Color.White
                                     ),
                                     shape = RoundedCornerShape(10.dp),
                                     modifier = Modifier.weight(1f)
                                 ) {
-                                    Text("${preset.toInt()}%", fontWeight = FontWeight.Bold)
+                                    Text("${preset.toInt()}%", fontWeight = FontWeight.Bold, color = if (isSelected) DarkBlue else Color.White)
                                 }
                             }
                         }
                         Spacer(Modifier.height(16.dp))
 
-                        // Result card (NavyLight bg)
+                        // Result card (DarkBlueDeep bg)
                         Card(
                             modifier = Modifier.fillMaxWidth(),
-                            colors = CardDefaults.cardColors(containerColor = NavyLight),
-                            shape = RoundedCornerShape(12.dp)
+                            colors = CardDefaults.cardColors(containerColor = DarkBlueDeep),
+                            shape = RoundedCornerShape(14.dp)
                         ) {
                             Column(Modifier.padding(14.dp)) {
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
-                                    Text("Cost Per Jar:", color = TextSecondary, fontSize = 13.sp)
-                                    Text(formatMoneyDetailed(costPerJar), color = White, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                                    Text("Cost Per Jar:", color = Color.White.copy(alpha = 0.75f), fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                                    Text(formatMoneyDetailed(costPerJar), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
                                 }
                                 Spacer(Modifier.height(4.dp))
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
-                                    Text("Profit Per Jar:", color = TextSecondary, fontSize = 13.sp)
-                                    Text(formatMoneyDetailed(profitAmount), color = ProfitGreen, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                                    Text("Profit Per Jar:", color = Color.White.copy(alpha = 0.75f), fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                                    Text(formatMoneyDetailed(profitAmount), color = SuccessGreen, fontWeight = FontWeight.Bold, fontSize = 13.sp)
                                 }
                                 HorizontalDivider(
                                     modifier = Modifier.padding(vertical = 8.dp),
-                                    color = NavyBorder
+                                    color = DarkBlue
                                 )
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Text("Sell At:", color = White, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                                    Text("Sell At:", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 15.sp)
                                     Text(
                                         formatMoney(sellingPrice),
-                                        color = Gold,
+                                        color = Yellow,
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 20.sp
                                     )
@@ -247,26 +248,27 @@ fun PricingScreen(
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = NavyMedium),
+                    colors = CardDefaults.cardColors(containerColor = DarkBlue),
                     border = BorderStroke(1.dp, CardBorder),
-                    shape = RoundedCornerShape(14.dp)
+                    shape = RoundedCornerShape(20.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
                 ) {
                     Column(Modifier.padding(16.dp)) {
                         Text(
                             "Bulk Order Calculation",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = Gold
+                            color = Yellow
                         )
                         Spacer(Modifier.height(14.dp))
 
                         OutlinedTextField(
                             value = bulkJars,
                             onValueChange = { bulkJars = it },
-                            label = { Text("Number of Jars") },
-                            placeholder = { Text("e.g. 50, 100", color = TextSecondary) },
+                            label = { Text("Number of Jars", fontWeight = FontWeight.Bold) },
+                            placeholder = { Text("e.g. 50, 100", color = DarkBlue.copy(alpha = 0.6f), fontWeight = FontWeight.Bold) },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            shape = RoundedCornerShape(12.dp),
+                            shape = RoundedCornerShape(14.dp),
                             modifier = Modifier.fillMaxWidth(),
                             colors = standardTextFieldColors()
                         )
@@ -274,40 +276,40 @@ fun PricingScreen(
 
                         Card(
                             modifier = Modifier.fillMaxWidth(),
-                            colors = CardDefaults.cardColors(containerColor = NavyLight),
-                            shape = RoundedCornerShape(12.dp)
+                            colors = CardDefaults.cardColors(containerColor = DarkBlueDeep),
+                            shape = RoundedCornerShape(14.dp)
                         ) {
                             Column(Modifier.padding(14.dp)) {
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
-                                    Text("Total Cost:", color = TextSecondary, fontSize = 13.sp)
-                                    Text(formatMoney(totalCost), color = ExpenseRed, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                                    Text("Total Cost:", color = Color.White.copy(alpha = 0.75f), fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                                    Text(formatMoney(totalCost), color = AlertRed, fontWeight = FontWeight.Bold, fontSize = 13.sp)
                                 }
                                 Spacer(Modifier.height(6.dp))
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
-                                    Text("Total Profit:", color = TextSecondary, fontSize = 13.sp)
-                                    Text(formatMoney(totalProfit), color = ProfitGreen, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                    Text("Total Profit:", color = Color.White.copy(alpha = 0.75f), fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                                    Text(formatMoney(totalProfit), color = SuccessGreen, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                                 }
                                 Spacer(Modifier.height(6.dp))
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
-                                    Text("Total Revenue:", color = TextSecondary, fontSize = 13.sp)
-                                    Text(formatMoney(totalRevenue), color = White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                    Text("Total Revenue:", color = Color.White.copy(alpha = 0.75f), fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                                    Text(formatMoney(totalRevenue), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                                 }
                                 Spacer(Modifier.height(6.dp))
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
-                                    Text("Profit Margin:", color = TextSecondary, fontSize = 13.sp)
-                                    Text("$profitMargin%", color = GoldLight, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                    Text("Profit Margin:", color = Color.White.copy(alpha = 0.75f), fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                                    Text("$profitMargin%", color = Yellow, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                                 }
                             }
                         }

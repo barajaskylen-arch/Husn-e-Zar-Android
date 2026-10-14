@@ -18,6 +18,9 @@ import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -43,7 +46,16 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        enableEdgeToEdge(
+            statusBarStyle = androidx.activity.SystemBarStyle.light(
+                android.graphics.Color.TRANSPARENT,
+                android.graphics.Color.TRANSPARENT
+            ),
+            navigationBarStyle = androidx.activity.SystemBarStyle.light(
+                android.graphics.Color.TRANSPARENT,
+                android.graphics.Color.TRANSPARENT
+            )
+        )
         setContent {
             MyApplicationTheme {
                 val isLoggedIn by appViewModel.isLoggedIn.collectAsState()
@@ -58,7 +70,7 @@ class MainActivity : ComponentActivity() {
                 } else {
                     Surface(
                         modifier = Modifier.fillMaxSize(),
-                        color = NavyDark
+                        color = Color.White
                     ) {
                         var showCustomerModal by remember { mutableStateOf(false) }
                     var showBalanceModal by remember { mutableStateOf(false) }
@@ -89,7 +101,7 @@ class MainActivity : ComponentActivity() {
 
                     NavHost(navController = navController, startDestination = "dashboard") {
                         composable("dashboard") {
-                            Column(Modifier.fillMaxSize().background(NavyDark)) {
+                            Column(Modifier.fillMaxSize().background(Color.White)) {
                                 Box(modifier = Modifier.weight(1f)) {
                                     DashboardScreen(
                                         appViewModel = appViewModel,
@@ -112,7 +124,7 @@ class MainActivity : ComponentActivity() {
                         }
 
                         composable("orders") {
-                            Column(Modifier.fillMaxSize().background(NavyDark)) {
+                            Column(Modifier.fillMaxSize().background(Color.White)) {
                                 Box(modifier = Modifier.weight(1f)) {
                                     OrdersScreen(appViewModel, ordersViewModel)
                                 }
@@ -121,7 +133,7 @@ class MainActivity : ComponentActivity() {
                         }
 
                         composable("inventory") {
-                            Column(Modifier.fillMaxSize().background(NavyDark)) {
+                            Column(Modifier.fillMaxSize().background(Color.White)) {
                                 Box(modifier = Modifier.weight(1f)) {
                                     InventoryScreen(appViewModel = appViewModel)
                                 }
@@ -130,7 +142,7 @@ class MainActivity : ComponentActivity() {
                         }
 
                         composable("customers") {
-                            Column(Modifier.fillMaxSize().background(NavyDark)) {
+                            Column(Modifier.fillMaxSize().background(Color.White)) {
                                 Box(modifier = Modifier.weight(1f)) {
                                     CustomersScreen(
                                         appViewModel = appViewModel,
@@ -145,7 +157,7 @@ class MainActivity : ComponentActivity() {
                         }
 
                         composable("expenses") {
-                            Column(Modifier.fillMaxSize().background(NavyDark)) {
+                            Column(Modifier.fillMaxSize().background(Color.White)) {
                                 Box(modifier = Modifier.weight(1f)) {
                                     ExpensesScreen(
                                         appViewModel = appViewModel,
@@ -157,7 +169,7 @@ class MainActivity : ComponentActivity() {
                         }
 
                         composable("schedule") {
-                            Column(Modifier.fillMaxSize().background(NavyDark)) {
+                            Column(Modifier.fillMaxSize().background(Color.White)) {
                                 Box(modifier = Modifier.weight(1f)) {
                                     ScheduleScreen(appViewModel = appViewModel)
                                 }
@@ -166,7 +178,7 @@ class MainActivity : ComponentActivity() {
                         }
 
                         composable("settings") {
-                            Column(Modifier.fillMaxSize().background(NavyDark)) {
+                            Column(Modifier.fillMaxSize().background(Color.White)) {
                                 Box(modifier = Modifier.weight(1f)) {
                                     SettingsScreen(appViewModel = appViewModel)
                                 }
@@ -222,141 +234,114 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun AppBottomNavigation(currentRoute: String, navController: NavController) {
-    NavigationBar(
-        containerColor = NavyDark
-    ) {
-        NavigationBarItem(
-            icon = { Icon(Icons.Default.Home, contentDescription = "Dashboard") },
-            label = { Text("Dashboard", fontSize = 10.sp, maxLines = 1, softWrap = false) },
-            selected = currentRoute == "dashboard",
-            onClick = {
-                navController.navigate("dashboard") {
-                    popUpTo(navController.graph.startDestinationId) { saveState = true }
-                    launchSingleTop = true
-                    restoreState = true
-                }
-            },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = Gold,
-                selectedTextColor = Gold,
-                unselectedIconColor = TextSecondary,
-                unselectedTextColor = TextSecondary,
-                indicatorColor = NavyLight
-            )
+    val unselectedColor = Color(0xFF8A99AD)
+    val itemColors = NavigationBarItemDefaults.colors(
+        selectedIconColor = DarkBlue,
+        selectedTextColor = DarkBlue,
+        unselectedIconColor = unselectedColor,
+        unselectedTextColor = unselectedColor,
+        indicatorColor = Yellow
+    )
+
+    Column {
+        HorizontalDivider(
+            color = Yellow,
+            thickness = 1.dp
         )
-        NavigationBarItem(
-            icon = { Icon(Icons.Default.ShoppingCart, contentDescription = "Orders") },
-            label = { Text("Orders", fontSize = 10.sp, maxLines = 1, softWrap = false) },
-            selected = currentRoute == "orders",
-            onClick = {
-                navController.navigate("orders") {
-                    popUpTo(navController.graph.startDestinationId) { saveState = true }
-                    launchSingleTop = true
-                    restoreState = true
-                }
-            },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = Gold,
-                selectedTextColor = Gold,
-                unselectedIconColor = TextSecondary,
-                unselectedTextColor = TextSecondary,
-                indicatorColor = NavyLight
+        NavigationBar(
+            containerColor = Color.White
+        ) {
+            NavigationBarItem(
+                icon = { Icon(Icons.Default.Home, contentDescription = "Dashboard") },
+                label = { Text("Dashboard", fontSize = 10.sp, maxLines = 1, softWrap = false, fontWeight = FontWeight.Bold) },
+                selected = currentRoute == "dashboard",
+                onClick = {
+                    navController.navigate("dashboard") {
+                        popUpTo(navController.graph.startDestinationId) { saveState = true }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                },
+                colors = itemColors
             )
-        )
-        NavigationBarItem(
-            icon = { Icon(Icons.Default.Build, contentDescription = "Inventory") },
-            label = { Text("Inventory", fontSize = 10.sp, maxLines = 1, softWrap = false) },
-            selected = currentRoute == "inventory",
-            onClick = {
-                navController.navigate("inventory") {
-                    popUpTo(navController.graph.startDestinationId) { saveState = true }
-                    launchSingleTop = true
-                    restoreState = true
-                }
-            },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = Gold,
-                selectedTextColor = Gold,
-                unselectedIconColor = TextSecondary,
-                unselectedTextColor = TextSecondary,
-                indicatorColor = NavyLight
+            NavigationBarItem(
+                icon = { Icon(Icons.Default.ShoppingCart, contentDescription = "Orders") },
+                label = { Text("Orders", fontSize = 10.sp, maxLines = 1, softWrap = false, fontWeight = FontWeight.Bold) },
+                selected = currentRoute == "orders",
+                onClick = {
+                    navController.navigate("orders") {
+                        popUpTo(navController.graph.startDestinationId) { saveState = true }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                },
+                colors = itemColors
             )
-        )
-        NavigationBarItem(
-            icon = { Icon(Icons.Default.People, contentDescription = "Customers") },
-            label = { Text("Customers", fontSize = 10.sp, maxLines = 1, softWrap = false) },
-            selected = currentRoute == "customers",
-            onClick = {
-                navController.navigate("customers") {
-                    popUpTo(navController.graph.startDestinationId) { saveState = true }
-                    launchSingleTop = true
-                    restoreState = true
-                }
-            },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = Gold,
-                selectedTextColor = Gold,
-                unselectedIconColor = TextSecondary,
-                unselectedTextColor = TextSecondary,
-                indicatorColor = NavyLight
+            NavigationBarItem(
+                icon = { Icon(Icons.Default.Build, contentDescription = "Inventory") },
+                label = { Text("Inventory", fontSize = 10.sp, maxLines = 1, softWrap = false, fontWeight = FontWeight.Bold) },
+                selected = currentRoute == "inventory",
+                onClick = {
+                    navController.navigate("inventory") {
+                        popUpTo(navController.graph.startDestinationId) { saveState = true }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                },
+                colors = itemColors
             )
-        )
-        NavigationBarItem(
-            icon = { Icon(Icons.Default.AccountBalanceWallet, contentDescription = "Expenses") },
-            label = { Text("Expenses", fontSize = 10.sp, maxLines = 1, softWrap = false) },
-            selected = currentRoute == "expenses",
-            onClick = {
-                navController.navigate("expenses") {
-                    popUpTo(navController.graph.startDestinationId) { saveState = true }
-                    launchSingleTop = true
-                    restoreState = true
-                }
-            },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = Gold,
-                selectedTextColor = Gold,
-                unselectedIconColor = TextSecondary,
-                unselectedTextColor = TextSecondary,
-                indicatorColor = NavyLight
+            NavigationBarItem(
+                icon = { Icon(Icons.Default.People, contentDescription = "Customers") },
+                label = { Text("Customers", fontSize = 10.sp, maxLines = 1, softWrap = false, fontWeight = FontWeight.Bold) },
+                selected = currentRoute == "customers",
+                onClick = {
+                    navController.navigate("customers") {
+                        popUpTo(navController.graph.startDestinationId) { saveState = true }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                },
+                colors = itemColors
             )
-        )
-        NavigationBarItem(
-            icon = { Icon(Icons.Default.DateRange, contentDescription = "Schedule") },
-            label = { Text("Schedule", fontSize = 10.sp, maxLines = 1, softWrap = false) },
-            selected = currentRoute == "schedule",
-            onClick = {
-                navController.navigate("schedule") {
-                    popUpTo(navController.graph.startDestinationId) { saveState = true }
-                    launchSingleTop = true
-                    restoreState = true
-                }
-            },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = Gold,
-                selectedTextColor = Gold,
-                unselectedIconColor = TextSecondary,
-                unselectedTextColor = TextSecondary,
-                indicatorColor = NavyLight
+            NavigationBarItem(
+                icon = { Icon(Icons.Default.AccountBalanceWallet, contentDescription = "Expenses") },
+                label = { Text("Expenses", fontSize = 10.sp, maxLines = 1, softWrap = false, fontWeight = FontWeight.Bold) },
+                selected = currentRoute == "expenses",
+                onClick = {
+                    navController.navigate("expenses") {
+                        popUpTo(navController.graph.startDestinationId) { saveState = true }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                },
+                colors = itemColors
             )
-        )
-        NavigationBarItem(
-            icon = { Icon(Icons.Default.Settings, contentDescription = "Settings") },
-            label = { Text("Settings", fontSize = 10.sp, maxLines = 1, softWrap = false) },
-            selected = currentRoute == "settings",
-            onClick = {
-                navController.navigate("settings") {
-                    popUpTo(navController.graph.startDestinationId) { saveState = true }
-                    launchSingleTop = true
-                    restoreState = true
-                }
-            },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = Gold,
-                selectedTextColor = Gold,
-                unselectedIconColor = TextSecondary,
-                unselectedTextColor = TextSecondary,
-                indicatorColor = NavyLight
+            NavigationBarItem(
+                icon = { Icon(Icons.Default.DateRange, contentDescription = "Schedule") },
+                label = { Text("Schedule", fontSize = 10.sp, maxLines = 1, softWrap = false, fontWeight = FontWeight.Bold) },
+                selected = currentRoute == "schedule",
+                onClick = {
+                    navController.navigate("schedule") {
+                        popUpTo(navController.graph.startDestinationId) { saveState = true }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                },
+                colors = itemColors
             )
-        )
+            NavigationBarItem(
+                icon = { Icon(Icons.Default.Settings, contentDescription = "Settings") },
+                label = { Text("Settings", fontSize = 10.sp, maxLines = 1, softWrap = false, fontWeight = FontWeight.Bold) },
+                selected = currentRoute == "settings",
+                onClick = {
+                    navController.navigate("settings") {
+                        popUpTo(navController.graph.startDestinationId) { saveState = true }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                },
+                colors = itemColors
+            )
+        }
     }
 }

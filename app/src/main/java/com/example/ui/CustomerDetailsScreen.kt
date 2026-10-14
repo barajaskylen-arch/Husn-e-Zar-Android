@@ -16,6 +16,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.*
@@ -111,8 +112,8 @@ fun CustomerDetailsScreen(
     var showStatementDialog by remember { mutableStateOf(false) }
 
     if (customer == null) {
-        Box(modifier = Modifier.fillMaxSize().background(NavyDark), contentAlignment = Alignment.Center) {
-            Text("Customer not found.", color = TextSecondary)
+        Box(modifier = Modifier.fillMaxSize().background(Color.White), contentAlignment = Alignment.Center) {
+            Text("Customer not found.", color = DarkBlue, fontWeight = FontWeight.Bold)
         }
         return
     }
@@ -122,46 +123,46 @@ fun CustomerDetailsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Customer Profile", fontWeight = FontWeight.Bold, color = Gold) },
+                title = { Text("Customer Profile", fontWeight = FontWeight.Bold, color = Yellow) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = White)
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Yellow)
                     }
                 },
                 actions = {
                     Button(
                         onClick = { showStatementDialog = true },
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Gold,
-                            contentColor = NavyDark
+                            containerColor = Yellow,
+                            contentColor = DarkBlue
                         ),
-                        shape = RoundedCornerShape(20.dp),
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                        shape = RoundedCornerShape(14.dp),
+                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
                         modifier = Modifier.padding(end = 8.dp)
                     ) {
                         Icon(
                             Icons.Default.Share,
                             contentDescription = "Statement",
                             modifier = Modifier.size(16.dp),
-                            tint = NavyDark
+                            tint = DarkBlue
                         )
                         Spacer(Modifier.width(6.dp))
-                        Text("Statement", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                        Text("Statement", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = DarkBlue)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = NavyDark,
-                    titleContentColor = Gold,
-                    navigationIconContentColor = White
+                    containerColor = DarkBlue,
+                    titleContentColor = Yellow,
+                    navigationIconContentColor = Yellow
                 )
             )
         },
-        containerColor = NavyDark
+        containerColor = Color.White
     ) { paddingVals ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .background(NavyDark)
+                .background(Color.White)
                 .padding(paddingVals)
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp)
@@ -170,9 +171,10 @@ fun CustomerDetailsScreen(
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = NavyMedium),
+                    colors = CardDefaults.cardColors(containerColor = DarkBlue),
                     border = BorderStroke(1.dp, CardBorder),
-                    shape = RoundedCornerShape(14.dp)
+                    shape = RoundedCornerShape(20.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Row(
@@ -181,27 +183,27 @@ fun CustomerDetailsScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
-                                Text(currentCustomer.name, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = Gold)
-                                Text("ID: ${currentCustomer.id}", style = MaterialTheme.typography.labelLarge, color = TextSecondary)
+                                Text(currentCustomer.name, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = Yellow)
+                                Text("ID: ${currentCustomer.id}", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = Color.White.copy(alpha = 0.7f))
                             }
                         }
                         Spacer(Modifier.height(8.dp))
-                        Text("Phone: ${currentCustomer.phone}", color = White)
-                        Text("Address: ${currentCustomer.address}", color = WhiteSoft)
-                        Text("Joined: ${currentCustomer.joiningDate}", color = TextSecondary)
+                        Text("Phone: ${currentCustomer.phone}", color = Color.White, fontWeight = FontWeight.Bold)
+                        Text("Address: ${currentCustomer.address}", color = Color.White.copy(alpha = 0.85f), fontWeight = FontWeight.Bold)
+                        Text("Joined: ${currentCustomer.joiningDate}", color = Color.White.copy(alpha = 0.7f), fontWeight = FontWeight.Bold)
                         Spacer(Modifier.height(14.dp))
                         Card(
                             colors = CardDefaults.cardColors(
                                 containerColor = if (currentCustomer.pendingBalance > 0) AlertRedBg else AlertGreenBg
                             ),
-                            border = BorderStroke(1.dp, if (currentCustomer.pendingBalance > 0) ExpenseRed else ProfitGreen),
-                            shape = RoundedCornerShape(10.dp)
+                            border = BorderStroke(1.5.dp, if (currentCustomer.pendingBalance > 0) AlertRed else SuccessGreen),
+                            shape = RoundedCornerShape(14.dp)
                         ) {
                             Text(
                                 "Pending Balance: ${formatMoney(currentCustomer.pendingBalance)}",
                                 modifier = Modifier.padding(12.dp).fillMaxWidth(),
                                 fontWeight = FontWeight.Bold,
-                                color = if (currentCustomer.pendingBalance > 0) ExpenseRed else ProfitGreen,
+                                color = if (currentCustomer.pendingBalance > 0) AlertRed else SuccessGreen,
                                 style = MaterialTheme.typography.titleMedium
                             )
                         }
@@ -211,29 +213,30 @@ fun CustomerDetailsScreen(
 
             // Area II: Order History Ledger
             item {
-                Text("Order History Ledger", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = Gold)
+                Text("Order History Ledger", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = DarkBlue)
             }
             if (orders.isEmpty()) {
                 item {
-                    Text("No orders found.", color = TextSecondary)
+                    Text("No orders found.", color = DarkBlue.copy(alpha = 0.7f), fontWeight = FontWeight.Bold)
                 }
             } else {
                 items(orders) { order ->
                     Card(
                         modifier = Modifier.fillMaxWidth().clickable { showEditOrder = order },
-                        colors = CardDefaults.cardColors(containerColor = NavyMedium),
+                        colors = CardDefaults.cardColors(containerColor = DarkBlue),
                         border = BorderStroke(1.dp, CardBorder),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(20.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
                     ) {
-                        Column(modifier = Modifier.padding(14.dp)) {
+                        Column(modifier = Modifier.padding(16.dp)) {
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                Text("Order ${order.id}", fontWeight = FontWeight.Bold, color = White)
-                                Text(order.orderDate, style = MaterialTheme.typography.labelMedium, color = TextSecondary)
+                                Text("Order ${order.id}", fontWeight = FontWeight.Bold, color = Yellow)
+                                Text(order.orderDate, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = Color.White.copy(alpha = 0.7f))
                             }
                             Spacer(Modifier.height(4.dp))
-                            Text("Jars: ${order.jarsQuantity} | Total: ${formatMoney(order.totalAmount)}", color = WhiteSoft)
-                            Text("Paid: ${formatMoney(order.paidAmount)} | Pending: ${formatMoney(order.pendingAmount)}", color = if (order.pendingAmount > 0) ExpenseRed else ProfitGreen)
-                            
+                            Text("Jars: ${order.jarsQuantity} | Total: ${formatMoney(order.totalAmount)}", color = Color.White, fontWeight = FontWeight.Bold)
+                            Text("Paid: ${formatMoney(order.paidAmount)} | Pending: ${formatMoney(order.pendingAmount)}", color = if (order.pendingAmount > 0) AlertRed else SuccessGreen, fontWeight = FontWeight.Bold)
+
                             if (order.pendingAmount > 0) {
                                 Spacer(Modifier.height(8.dp))
                                 Row(
@@ -241,10 +244,10 @@ fun CustomerDetailsScreen(
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Text("Due: ${order.dueDate}", color = ExpenseRed, style = MaterialTheme.typography.labelSmall)
-                                    
+                                    Text("Due: ${order.dueDate}", color = AlertRed, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelSmall)
+
                                     // WhatsApp Payment Reminder button
-                                    OutlinedButton(
+                                    Button(
                                         onClick = {
                                             val reminderText = generatePaymentReminder(currentCustomer, order)
                                             val rawPhone = currentCustomer.phone.replace("-", "").replace(" ", "").replace("+", "")
@@ -259,15 +262,17 @@ fun CustomerDetailsScreen(
                                                 context.startActivity(Intent(Intent.ACTION_VIEW, uri))
                                             }
                                         },
-                                        border = BorderStroke(1.dp, Gold),
-                                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Gold),
-                                        shape = RoundedCornerShape(8.dp),
-                                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 2.dp),
-                                        modifier = Modifier.height(30.dp)
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = Yellow,
+                                            contentColor = DarkBlue
+                                        ),
+                                        shape = RoundedCornerShape(10.dp),
+                                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                                        modifier = Modifier.height(34.dp)
                                     ) {
-                                        Icon(Icons.Default.Send, contentDescription = "Remind", tint = Gold, modifier = Modifier.size(12.dp))
+                                        Icon(Icons.Default.Send, contentDescription = "Remind", tint = DarkBlue, modifier = Modifier.size(12.dp))
                                         Spacer(Modifier.width(4.dp))
-                                        Text("Remind", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                        Text("Remind", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = DarkBlue)
                                     }
                                 }
                             }
@@ -278,42 +283,43 @@ fun CustomerDetailsScreen(
 
             // Area III: Payment History Registry
             item {
-                Text("Payment History Registry", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = Gold)
+                Text("Payment History Registry", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = DarkBlue)
             }
             if (payments.isEmpty()) {
                 item {
-                    Text("No payments found.", color = TextSecondary)
+                    Text("No payments found.", color = DarkBlue.copy(alpha = 0.7f), fontWeight = FontWeight.Bold)
                 }
             } else {
                 items(payments) { payment ->
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = NavyMedium),
+                        colors = CardDefaults.cardColors(containerColor = DarkBlue),
                         border = BorderStroke(1.dp, CardBorder),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(20.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
                     ) {
                         Row(
-                            modifier = Modifier.padding(14.dp).fillMaxWidth(),
+                            modifier = Modifier.padding(16.dp).fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Column {
-                                Text(formatMoney(payment.amount), fontWeight = FontWeight.Bold, color = ProfitGreen, fontSize = 15.sp)
+                                Text(formatMoney(payment.amount), fontWeight = FontWeight.Bold, color = SuccessGreen, fontSize = 15.sp)
                                 if (payment.description.isNotBlank()) {
-                                    Text(payment.description, style = MaterialTheme.typography.bodySmall, color = TextSecondary)
+                                    Text(payment.description, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = Color.White.copy(alpha = 0.8f))
                                 }
                             }
-                            Text(payment.date, style = MaterialTheme.typography.labelMedium, color = TextSecondary)
+                            Text(payment.date, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = Color.White.copy(alpha = 0.7f))
                         }
                     }
                 }
             }
-            
+
             item { Spacer(Modifier.height(32.dp)) }
         }
     }
 
-    // Statement AlertDialog
+    // Statement AlertDialog (Dark Blue background, Yellow header, White monospace text)
     if (showStatementDialog) {
         val statementText = remember(currentCustomer, orders, payments) {
             generateCustomerStatement(currentCustomer, orders, payments)
@@ -321,22 +327,24 @@ fun CustomerDetailsScreen(
 
         AlertDialog(
             onDismissRequest = { showStatementDialog = false },
-            containerColor = NavyMedium,
+            containerColor = DarkBlue,
+            shape = RoundedCornerShape(20.dp),
             title = {
-                Text("Customer Statement", fontWeight = FontWeight.Bold, color = Gold)
+                Text("Customer Statement", fontWeight = FontWeight.Bold, color = Yellow)
             },
             text = {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .heightIn(max = 360.dp)
-                        .background(NavyDark, RoundedCornerShape(8.dp))
-                        .padding(12.dp)
+                        .background(Color.White, RoundedCornerShape(14.dp))
+                        .padding(14.dp)
                         .verticalScroll(rememberScrollState())
                 ) {
                     Text(
                         text = statementText,
-                        color = WhiteSoft,
+                        color = DarkBlue,
+                        fontWeight = FontWeight.Bold,
                         fontFamily = FontFamily.Monospace,
                         fontSize = 12.sp,
                         lineHeight = 16.sp
@@ -362,22 +370,26 @@ fun CustomerDetailsScreen(
                         }
                     },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Gold,
-                        contentColor = NavyDark
+                        containerColor = Yellow,
+                        contentColor = DarkBlue
                     ),
-                    shape = RoundedCornerShape(10.dp)
+                    shape = RoundedCornerShape(14.dp),
+                    modifier = Modifier.height(48.dp)
                 ) {
-                    Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(16.dp), tint = DarkBlue)
                     Spacer(Modifier.width(6.dp))
-                    Text("WhatsApp Share", fontWeight = FontWeight.Bold)
+                    Text("WhatsApp Share", fontWeight = FontWeight.Bold, color = DarkBlue)
                 }
             },
             dismissButton = {
-                TextButton(
+                OutlinedButton(
                     onClick = { showStatementDialog = false },
-                    colors = ButtonDefaults.textButtonColors(contentColor = TextSecondary)
+                    border = BorderStroke(2.dp, Yellow),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Yellow),
+                    shape = RoundedCornerShape(14.dp),
+                    modifier = Modifier.height(48.dp)
                 ) {
-                    Text("Close")
+                    Text("Close", fontWeight = FontWeight.Bold, color = Yellow)
                 }
             }
         )
@@ -385,7 +397,7 @@ fun CustomerDetailsScreen(
 
     if (showEditOrder != null) {
         val order = showEditOrder!!
-        EditOrderModal(
+        EditOrderDialog(
             order = order,
             onDismiss = { showEditOrder = null },
             onSave = { jars, paidAmount, dueDate ->
@@ -406,9 +418,8 @@ fun CustomerDetailsScreen(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EditOrderModal(
+fun EditOrderDialog(
     order: Order,
     onDismiss: () -> Unit,
     onSave: (Int, Double, String) -> Unit
@@ -418,98 +429,63 @@ fun EditOrderModal(
     var paid by remember { mutableStateOf(order.paidAmount.toString()) }
     var dueDate by remember { mutableStateOf(order.dueDate) }
 
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        containerColor = NavyMedium,
-        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+    AnimatedCenterDialog(
+        onDismiss = onDismiss,
+        title = "Edit Order ${order.id}",
+        icon = Icons.Default.Edit,
+        saveText = "Save Order Changes",
+        saveEnabled = (jars.toIntOrNull() ?: 0) > 0 && (paid.toDoubleOrNull() ?: -1.0) >= 0.0,
+        onSave = {
+            val j = jars.toIntOrNull()
+            val p = paid.toDoubleOrNull()
+            if (j != null && p != null && j > 0) {
+                onSave(j, p, dueDate)
+            }
+        }
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp)
-                .padding(bottom = 36.dp)
-                .verticalScroll(rememberScrollState())
-        ) {
-            BottomSheetHeader(title = "Edit Order ${order.id}", onDismiss = onDismiss)
+        Text("Note: Changing jars recalculates total based on unit price.", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = DarkBlue.copy(alpha = 0.7f))
 
-            Text("Note: Changing jars recalculates total based on unit price.", style = MaterialTheme.typography.labelSmall, color = TextSecondary)
-            Spacer(Modifier.height(12.dp))
+        OutlinedTextField(
+            value = jars,
+            onValueChange = { jars = it },
+            label = { Text("Jars Quantity *", fontWeight = FontWeight.Bold) },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            shape = RoundedCornerShape(14.dp),
+            modifier = Modifier.fillMaxWidth(),
+            colors = standardTextFieldColors()
+        )
 
+        OutlinedTextField(
+            value = paid,
+            onValueChange = { paid = it },
+            label = { Text("Paid Amount Rs. *", fontWeight = FontWeight.Bold) },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            shape = RoundedCornerShape(14.dp),
+            modifier = Modifier.fillMaxWidth(),
+            colors = standardTextFieldColors()
+        )
+
+        Box(modifier = Modifier.fillMaxWidth()) {
             OutlinedTextField(
-                value = jars,
-                onValueChange = { jars = it },
-                label = { Text("Jars Quantity *") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.fillMaxWidth(),
+                value = dueDate,
+                onValueChange = {},
+                readOnly = true,
+                label = { Text("Due Date *", fontWeight = FontWeight.Bold) },
+                trailingIcon = {
+                    IconButton(onClick = {
+                        showDatePickerDialog(context, dueDate) { dueDate = it }
+                    }) {
+                        Icon(Icons.Default.CalendarMonth, contentDescription = "Select Date", tint = DarkBlue)
+                    }
+                },
+                shape = RoundedCornerShape(14.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        showDatePickerDialog(context, dueDate) { dueDate = it }
+                    },
                 colors = standardTextFieldColors()
             )
-            Spacer(Modifier.height(12.dp))
-
-            OutlinedTextField(
-                value = paid,
-                onValueChange = { paid = it },
-                label = { Text("Paid Amount Rs. *") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.fillMaxWidth(),
-                colors = standardTextFieldColors()
-            )
-            Spacer(Modifier.height(12.dp))
-
-            Box(modifier = Modifier.fillMaxWidth()) {
-                OutlinedTextField(
-                    value = dueDate,
-                    onValueChange = {},
-                    readOnly = true,
-                    label = { Text("Due Date *") },
-                    trailingIcon = {
-                        IconButton(onClick = {
-                            showDatePickerDialog(context, dueDate) { dueDate = it }
-                        }) {
-                            Icon(Icons.Default.CalendarMonth, contentDescription = "Select Date", tint = Gold)
-                        }
-                    },
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable {
-                            showDatePickerDialog(context, dueDate) { dueDate = it }
-                        },
-                    colors = standardTextFieldColors()
-                )
-            }
-            Spacer(Modifier.height(24.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                OutlinedButton(
-                    onClick = onDismiss,
-                    border = BorderStroke(1.dp, NavyBorder),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = TextSecondary),
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text("Cancel")
-                }
-                Button(
-                    onClick = { 
-                        val j = jars.toIntOrNull()
-                        val p = paid.toDoubleOrNull()
-                        if (j != null && p != null && j > 0) {
-                            onSave(j, p, dueDate)
-                        }
-                    },
-                    enabled = (jars.toIntOrNull() ?: 0) > 0 && (paid.toDoubleOrNull() ?: -1.0) >= 0.0,
-                    colors = ButtonDefaults.buttonColors(containerColor = Gold, contentColor = NavyDark),
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text("Save Order Changes", fontWeight = FontWeight.Bold)
-                }
-            }
         }
     }
 }

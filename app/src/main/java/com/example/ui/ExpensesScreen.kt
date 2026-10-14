@@ -36,8 +36,8 @@ fun ExpensesScreen(
     val allExpenses by appViewModel.expenses.collectAsStateWithLifecycle()
     val allOrders by appViewModel.orders.collectAsStateWithLifecycle()
 
-    var selectedPeriod by remember { mutableStateOf("Monthly") } // "Daily", "Weekly", "Monthly", "All"
-    var selectedCategory by remember { mutableStateOf("All") } // "All", "Raw Material", "Marketing", "Logistics", "Others"
+    var selectedPeriod by remember { mutableStateOf("Monthly") }
+    var selectedCategory by remember { mutableStateOf("All") }
 
     val dateFormat = remember { SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()) }
     val monthFormat = remember { SimpleDateFormat("yyyy-MM", Locale.getDefault()) }
@@ -45,14 +45,12 @@ fun ExpensesScreen(
     val todayStr = remember { dateFormat.format(Date()) }
     val currentMonthStr = remember { monthFormat.format(Date()) }
 
-    // Week start date (last 7 days)
     val weekStartStr = remember {
         val cal = Calendar.getInstance()
         cal.add(Calendar.DAY_OF_YEAR, -7)
         dateFormat.format(cal.time)
     }
 
-    // Filtered expenses by period & category
     val periodExpenses = remember(allExpenses, selectedPeriod) {
         when (selectedPeriod) {
             "Daily" -> allExpenses.filter { it.date == todayStr }
@@ -79,7 +77,6 @@ fun ExpensesScreen(
         }
     }
 
-    // Summary Calculations
     val totalExpensePeriod = periodExpenses.sumOf { it.amount }
     val totalRevenuePeriod = periodOrders.sumOf { it.totalAmount }
     val expenseRatio = if (totalRevenuePeriod > 0) {
@@ -101,15 +98,15 @@ fun ExpensesScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Expenses Registry", fontWeight = FontWeight.Bold, color = Gold) },
+                title = { Text("Expenses Registry", fontWeight = FontWeight.Bold, color = Yellow) },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = NavyDark,
-                    titleContentColor = Gold,
-                    actionIconContentColor = White
+                    containerColor = DarkBlue,
+                    titleContentColor = Yellow,
+                    actionIconContentColor = Yellow
                 ),
                 actions = {
                     IconButton(onClick = onAddExpense) {
-                        Icon(Icons.Default.Add, contentDescription = "Add Expense", tint = Gold)
+                        Icon(Icons.Default.Add, contentDescription = "Add Expense", tint = Yellow)
                     }
                 }
             )
@@ -117,18 +114,18 @@ fun ExpensesScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = onAddExpense,
-                containerColor = Gold,
-                contentColor = NavyDark
+                containerColor = Yellow,
+                contentColor = DarkBlue
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Add Expense")
             }
         },
-        containerColor = NavyDark
+        containerColor = Color.White
     ) { paddingVals ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .background(NavyDark)
+                .background(Color.White)
                 .padding(paddingVals)
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -138,7 +135,7 @@ fun ExpensesScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(NavyMedium, RoundedCornerShape(12.dp))
+                        .background(Color(0xFFF0F4F8), RoundedCornerShape(14.dp))
                         .padding(4.dp),
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
@@ -147,16 +144,16 @@ fun ExpensesScreen(
                         Surface(
                             modifier = Modifier
                                 .weight(1f)
-                                .height(38.dp),
+                                .height(40.dp),
                             shape = RoundedCornerShape(10.dp),
-                            color = if (isSelected) Gold else Color.Transparent,
+                            color = if (isSelected) Yellow else Color.Transparent,
                             onClick = { selectedPeriod = period }
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Text(
                                     text = period,
-                                    color = if (isSelected) NavyDark else TextSecondary,
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                    color = if (isSelected) DarkBlue else DarkBlue.copy(alpha = 0.7f),
+                                    fontWeight = FontWeight.Bold,
                                     fontSize = 13.sp
                                 )
                             }
@@ -165,7 +162,7 @@ fun ExpensesScreen(
                 }
             }
 
-            // 2x2 Summary Grid
+            // 2x2 Summary Grid (Dark Blue Cards, 20dp corners)
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Row(
@@ -176,17 +173,18 @@ fun ExpensesScreen(
                         Card(
                             modifier = Modifier.weight(1f),
                             border = BorderStroke(1.dp, CardBorder),
-                            colors = CardDefaults.cardColors(containerColor = NavyMedium),
-                            shape = RoundedCornerShape(12.dp)
+                            colors = CardDefaults.cardColors(containerColor = DarkBlue),
+                            shape = RoundedCornerShape(20.dp),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
                         ) {
-                            Column(Modifier.padding(14.dp)) {
-                                Text("Total Expense", style = MaterialTheme.typography.labelMedium, color = TextSecondary)
+                            Column(Modifier.padding(16.dp)) {
+                                Text("Total Expense", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = Color.White.copy(alpha = 0.75f))
                                 Spacer(Modifier.height(4.dp))
                                 Text(
                                     formatMoney(totalExpensePeriod),
                                     style = MaterialTheme.typography.titleLarge,
                                     fontWeight = FontWeight.Bold,
-                                    color = ExpenseRed
+                                    color = AlertRed
                                 )
                             }
                         }
@@ -195,17 +193,18 @@ fun ExpensesScreen(
                         Card(
                             modifier = Modifier.weight(1f),
                             border = BorderStroke(1.dp, CardBorder),
-                            colors = CardDefaults.cardColors(containerColor = NavyMedium),
-                            shape = RoundedCornerShape(12.dp)
+                            colors = CardDefaults.cardColors(containerColor = DarkBlue),
+                            shape = RoundedCornerShape(20.dp),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
                         ) {
-                            Column(Modifier.padding(14.dp)) {
-                                Text("Total Revenue", style = MaterialTheme.typography.labelMedium, color = TextSecondary)
+                            Column(Modifier.padding(16.dp)) {
+                                Text("Total Revenue", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = Color.White.copy(alpha = 0.75f))
                                 Spacer(Modifier.height(4.dp))
                                 Text(
                                     formatMoney(totalRevenuePeriod),
                                     style = MaterialTheme.typography.titleLarge,
                                     fontWeight = FontWeight.Bold,
-                                    color = ProfitGreen
+                                    color = SuccessGreen
                                 )
                             }
                         }
@@ -219,16 +218,17 @@ fun ExpensesScreen(
                         Card(
                             modifier = Modifier.weight(1f),
                             border = BorderStroke(1.dp, CardBorder),
-                            colors = CardDefaults.cardColors(containerColor = NavyMedium),
-                            shape = RoundedCornerShape(12.dp)
+                            colors = CardDefaults.cardColors(containerColor = DarkBlue),
+                            shape = RoundedCornerShape(20.dp),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
                         ) {
-                            Column(Modifier.padding(14.dp)) {
+                            Column(Modifier.padding(16.dp)) {
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
-                                    Text("Expense Ratio", style = MaterialTheme.typography.labelMedium, color = TextSecondary)
-                                    Text("$expenseRatioPercent%", fontWeight = FontWeight.Bold, color = if (expenseRatioPercent > 50) ExpenseRed else GoldLight, fontSize = 12.sp)
+                                    Text("Expense Ratio", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = Color.White.copy(alpha = 0.75f))
+                                    Text("$expenseRatioPercent%", fontWeight = FontWeight.Bold, color = if (expenseRatioPercent > 50) AlertRed else Yellow, fontSize = 12.sp)
                                 }
                                 Spacer(Modifier.height(8.dp))
                                 LinearProgressIndicator(
@@ -236,8 +236,8 @@ fun ExpensesScreen(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .height(6.dp),
-                                    color = if (expenseRatioPercent > 50) ExpenseRed else GoldLight,
-                                    trackColor = NavyLight,
+                                    color = if (expenseRatioPercent > 50) AlertRed else Yellow,
+                                    trackColor = DarkBlueDeep,
                                 )
                             }
                         }
@@ -246,17 +246,18 @@ fun ExpensesScreen(
                         Card(
                             modifier = Modifier.weight(1f),
                             border = BorderStroke(1.dp, CardBorder),
-                            colors = CardDefaults.cardColors(containerColor = NavyMedium),
-                            shape = RoundedCornerShape(12.dp)
+                            colors = CardDefaults.cardColors(containerColor = DarkBlue),
+                            shape = RoundedCornerShape(20.dp),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
                         ) {
-                            Column(Modifier.padding(14.dp)) {
-                                Text("Top Category", style = MaterialTheme.typography.labelMedium, color = TextSecondary)
+                            Column(Modifier.padding(16.dp)) {
+                                Text("Top Category", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = Color.White.copy(alpha = 0.75f))
                                 Spacer(Modifier.height(4.dp))
                                 Text(
                                     topCategory,
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
-                                    color = GoldLight,
+                                    color = Yellow,
                                     maxLines = 1
                                 )
                             }
@@ -279,20 +280,20 @@ fun ExpensesScreen(
                         FilterChip(
                             selected = isSelected,
                             onClick = { selectedCategory = cat },
-                            label = { Text(cat, fontSize = 12.sp, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal) },
+                            label = { Text(cat, fontSize = 12.sp, fontWeight = FontWeight.Bold) },
                             colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = Gold,
-                                selectedLabelColor = NavyDark,
-                                containerColor = NavyMedium,
-                                labelColor = White
+                                selectedContainerColor = Yellow,
+                                selectedLabelColor = DarkBlue,
+                                containerColor = Color(0xFFF0F4F8),
+                                labelColor = DarkBlue
                             ),
                             border = FilterChipDefaults.filterChipBorder(
-                                borderColor = if (isSelected) Gold else NavyBorder,
-                                selectedBorderColor = Gold,
+                                borderColor = if (isSelected) Yellow else DarkBlue,
+                                selectedBorderColor = Yellow,
                                 enabled = true,
                                 selected = isSelected
                             ),
-                            shape = RoundedCornerShape(8.dp)
+                            shape = RoundedCornerShape(10.dp)
                         )
                     }
                 }
@@ -303,9 +304,10 @@ fun ExpensesScreen(
                 item {
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = NavyMedium),
+                        colors = CardDefaults.cardColors(containerColor = DarkBlue),
                         border = BorderStroke(1.dp, CardBorder),
-                        shape = RoundedCornerShape(14.dp)
+                        shape = RoundedCornerShape(20.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
                     ) {
                         Column(
                             modifier = Modifier
@@ -316,33 +318,34 @@ fun ExpensesScreen(
                             Icon(
                                 Icons.Default.ReceiptLong,
                                 contentDescription = null,
-                                tint = TextSecondary,
+                                tint = Yellow,
                                 modifier = Modifier.size(40.dp)
                             )
                             Spacer(Modifier.height(8.dp))
-                            Text("No expenses found for this selection.", color = TextSecondary, fontSize = 14.sp)
+                            Text("No expenses found for this selection.", color = Color.White.copy(alpha = 0.8f), fontWeight = FontWeight.Bold, fontSize = 14.sp)
                         }
                     }
                 }
             } else {
                 items(filteredExpenses) { expense ->
                     val categoryColor = when (expense.category.lowercase()) {
-                        "raw material" -> ProfitGreen
-                        "marketing" -> Gold
+                        "raw material" -> SuccessGreen
+                        "marketing" -> Yellow
                         "logistics" -> Color(0xFF64B5F6)
-                        else -> WhiteSoft
+                        else -> Color.White
                     }
                     val categoryBg = when (expense.category.lowercase()) {
                         "raw material" -> AlertGreenBg
                         "marketing" -> AlertYellowBg
                         "logistics" -> AlertBlueBg
-                        else -> NavyLight
+                        else -> DarkBlueDeep
                     }
 
                     Card(
                         border = BorderStroke(1.dp, CardBorder),
-                        colors = CardDefaults.cardColors(containerColor = NavyMedium),
-                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(containerColor = DarkBlue),
+                        shape = RoundedCornerShape(20.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Row(
@@ -353,7 +356,7 @@ fun ExpensesScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
-                                Text(expense.title, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium, color = White)
+                                Text(expense.title, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium, color = Color.White)
                                 Spacer(Modifier.height(4.dp))
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Surface(
@@ -365,23 +368,23 @@ fun ExpensesScreen(
                                             text = expense.category,
                                             color = categoryColor,
                                             fontSize = 11.sp,
-                                            fontWeight = FontWeight.SemiBold,
+                                            fontWeight = FontWeight.Bold,
                                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
                                         )
                                     }
                                     Spacer(Modifier.width(8.dp))
-                                    Text(expense.date, style = MaterialTheme.typography.bodySmall, color = TextSecondary)
+                                    Text(expense.date, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = Color.White.copy(alpha = 0.7f))
                                 }
                                 if (expense.description.isNotBlank()) {
                                     Spacer(Modifier.height(4.dp))
-                                    Text(expense.description, style = MaterialTheme.typography.bodySmall, color = TextSecondary)
+                                    Text(expense.description, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = Color.White.copy(alpha = 0.8f))
                                 }
                             }
                             Text(
                                 formatMoney(expense.amount),
                                 fontWeight = FontWeight.Bold,
                                 style = MaterialTheme.typography.titleMedium,
-                                color = ExpenseRed
+                                color = AlertRed
                             )
                         }
                     }

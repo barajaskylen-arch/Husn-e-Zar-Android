@@ -18,9 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.data.InventoryBatch
 import com.example.ui.theme.*
-import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,15 +34,15 @@ fun InventoryScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Inventory & Batch Production", fontWeight = FontWeight.Bold, color = Gold) },
+                title = { Text("Inventory & Batch Production", fontWeight = FontWeight.Bold, color = Yellow) },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = NavyDark,
-                    titleContentColor = Gold,
-                    actionIconContentColor = White
+                    containerColor = DarkBlue,
+                    titleContentColor = Yellow,
+                    actionIconContentColor = Yellow
                 ),
                 actions = {
                     IconButton(onClick = { showAddBatchModal = true }) {
-                        Icon(Icons.Default.Add, contentDescription = "Add Batch", tint = Gold)
+                        Icon(Icons.Default.Add, contentDescription = "Add Batch", tint = Yellow)
                     }
                 }
             )
@@ -52,18 +50,18 @@ fun InventoryScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { showAddBatchModal = true },
-                containerColor = Gold,
-                contentColor = NavyDark
+                containerColor = Yellow,
+                contentColor = DarkBlue
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Add Batch")
             }
         },
-        containerColor = NavyDark
+        containerColor = Color.White
     ) { paddingVals ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .background(NavyDark)
+                .background(Color.White)
                 .padding(paddingVals)
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -71,8 +69,9 @@ fun InventoryScreen(
             item {
                 Card(
                     border = BorderStroke(1.dp, CardBorder),
-                    colors = CardDefaults.cardColors(containerColor = NavyMedium),
-                    shape = RoundedCornerShape(14.dp),
+                    colors = CardDefaults.cardColors(containerColor = DarkBlue),
+                    shape = RoundedCornerShape(20.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(Modifier.padding(16.dp)) {
@@ -80,7 +79,7 @@ fun InventoryScreen(
                             "Real-Time Stock",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = Gold
+                            color = Yellow
                         )
                         Spacer(Modifier.height(8.dp))
                         Row(
@@ -89,21 +88,21 @@ fun InventoryScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Column {
-                                Text("Available Jars", color = TextSecondary, style = MaterialTheme.typography.bodySmall)
+                                Text("Available Jars", color = Color.White.copy(alpha = 0.8f), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
                                 Text(
                                     "$availableStock Units",
                                     style = MaterialTheme.typography.headlineMedium,
                                     fontWeight = FontWeight.Bold,
-                                    color = if (availableStock <= 15) ExpenseRed else ProfitGreen
+                                    color = if (availableStock <= 15) AlertRed else SuccessGreen
                                 )
                             }
                             Column(horizontalAlignment = Alignment.End) {
-                                Text("Base Unit Cost", color = TextSecondary, style = MaterialTheme.typography.bodySmall)
+                                Text("Base Unit Cost", color = Color.White.copy(alpha = 0.8f), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
                                 Text(
                                     formatMoneyDetailed(baseUnitCost),
                                     style = MaterialTheme.typography.titleLarge,
                                     fontWeight = FontWeight.Bold,
-                                    color = White
+                                    color = Color.White
                                 )
                             }
                         }
@@ -112,14 +111,14 @@ fun InventoryScreen(
                             Spacer(Modifier.height(12.dp))
                             Surface(
                                 color = AlertRedBg,
-                                shape = RoundedCornerShape(8.dp),
-                                border = BorderStroke(1.dp, ExpenseRed),
+                                shape = RoundedCornerShape(10.dp),
+                                border = BorderStroke(1.5.dp, AlertRed),
                                 modifier = Modifier.fillMaxWidth()
                             ) {
                                 Row(Modifier.padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(Icons.Default.Warning, contentDescription = "Low Stock", tint = ExpenseRed, modifier = Modifier.size(20.dp))
+                                    Icon(Icons.Default.Warning, contentDescription = "Low Stock", tint = AlertRed, modifier = Modifier.size(20.dp))
                                     Spacer(Modifier.width(8.dp))
-                                    Text("Low stock warning! Please create a new batch.", color = ExpenseRed, fontWeight = FontWeight.SemiBold, fontSize = 12.sp)
+                                    Text("Low stock warning! Please create a new batch.", color = AlertRed, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                                 }
                             }
                         }
@@ -132,7 +131,7 @@ fun InventoryScreen(
                     "Production History Ledger",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = Gold
+                    color = DarkBlue
                 )
             }
 
@@ -140,12 +139,13 @@ fun InventoryScreen(
                 item {
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = NavyMedium),
+                        colors = CardDefaults.cardColors(containerColor = DarkBlue),
                         border = BorderStroke(1.dp, CardBorder),
-                        shape = RoundedCornerShape(14.dp)
+                        shape = RoundedCornerShape(20.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
                     ) {
                         Box(Modifier.padding(32.dp).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                            Text("No batches recorded yet.", color = TextSecondary)
+                            Text("No batches recorded yet.", color = Color.White.copy(alpha = 0.8f), fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -153,8 +153,9 @@ fun InventoryScreen(
                 items(batches) { batch ->
                     Card(
                         border = BorderStroke(1.dp, CardBorder),
-                        colors = CardDefaults.cardColors(containerColor = NavyMedium),
-                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(containerColor = DarkBlue),
+                        shape = RoundedCornerShape(20.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Column(Modifier.padding(16.dp)) {
@@ -162,18 +163,18 @@ fun InventoryScreen(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Text("Batch #${batch.id}", fontWeight = FontWeight.Bold, color = Gold)
-                                Text(batch.date, style = MaterialTheme.typography.labelMedium, color = TextSecondary)
+                                Text("Batch #${batch.id}", fontWeight = FontWeight.Bold, color = Yellow)
+                                Text(batch.date, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = Color.White.copy(alpha = 0.7f))
                             }
                             Spacer(Modifier.height(6.dp))
-                            Text("Raw Material: ${formatMoney(batch.rawMaterialCost)} | Jars: ${batch.emptyJarsCount} (${formatMoneyDetailed(batch.jarUnitCost)}/jar)", color = WhiteSoft, fontSize = 13.sp)
-                            Text("Total Batch Cost: ${formatMoney(batch.totalCalculatedCost)}", color = White, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                            Text("Raw Material: ${formatMoney(batch.rawMaterialCost)} | Jars: ${batch.emptyJarsCount} (${formatMoneyDetailed(batch.jarUnitCost)}/jar)", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                            Text("Total Batch Cost: ${formatMoney(batch.totalCalculatedCost)}", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
                             Spacer(Modifier.height(4.dp))
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                Text("Ready Jars: ${batch.jarsProduced}", color = GoldLight, fontWeight = FontWeight.Bold)
+                                Text("Ready Jars: ${batch.jarsProduced}", color = Yellow, fontWeight = FontWeight.Bold)
                                 Text(
                                     "Cost: ${formatMoneyDetailed(batch.baseCostPerJar)} / jar",
-                                    color = ProfitGreen,
+                                    color = SuccessGreen,
                                     fontWeight = FontWeight.Bold
                                 )
                             }
