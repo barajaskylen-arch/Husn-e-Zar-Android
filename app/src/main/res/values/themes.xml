@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.MyApplication" parent="android:Theme.DeviceDefault.NoActionBar" />
+
+    <style name="GoldDatePickerTheme" parent="android:Theme.DeviceDefault.Dialog">
+        <item name="android:colorPrimary">#C9A227</item>
+        <item name="android:colorAccent">#C9A227</item>
+        <item name="android:colorBackground">#112240</item>
+        <item name="android:textColorPrimary">#FFFFFF</item>
+        <item name="android:textColorSecondary">#B8C5D9</item>
+    </style>
+</resources>
