@@ -397,11 +397,11 @@ fun SettingsScreen(
                     showImportConfirmDialog = false
                     pendingImportJson = null
                 },
-                containerColor = DarkBlue,
-                shape = RoundedCornerShape(20.dp),
+                containerColor = Color.White,
+                shape = RoundedCornerShape(24.dp),
                 title = { Text("⚠️ Data Overwrite Hoga", fontWeight = FontWeight.Bold, color = AlertRed) },
                 text = {
-                    Text("Import karne se aapka maujuda data delete ho jayega. Kya sure hain?", color = Color.White, fontWeight = FontWeight.Bold)
+                    Text("Import karne se aapka maujuda data delete ho jayega. Kya sure hain?", color = DarkBlue, fontWeight = FontWeight.Bold)
                 },
                 confirmButton = {
                     Button(
@@ -463,7 +463,7 @@ fun SettingsScreen(
                         ),
                         shape = RoundedCornerShape(14.dp)
                     ) {
-                        Text("Import Karo", fontWeight = FontWeight.Bold)
+                        Text("Import Karo", fontWeight = FontWeight.Bold, color = Color.White)
                     }
                 },
                 dismissButton = {
@@ -472,11 +472,11 @@ fun SettingsScreen(
                             showImportConfirmDialog = false
                             pendingImportJson = null
                         },
-                        border = BorderStroke(2.dp, Yellow),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Yellow),
+                        border = BorderStroke(2.dp, DarkBlue),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = DarkBlue),
                         shape = RoundedCornerShape(14.dp)
                     ) {
-                        Text("Cancel", fontWeight = FontWeight.Bold, color = Yellow)
+                        Text("Cancel", fontWeight = FontWeight.Bold, color = DarkBlue)
                     }
                 }
             )
@@ -486,12 +486,12 @@ fun SettingsScreen(
         if (showDeleteConfirmDialog) {
             AlertDialog(
                 onDismissRequest = { showDeleteConfirmDialog = false },
-                containerColor = DarkBlue,
-                shape = RoundedCornerShape(20.dp),
+                containerColor = Color.White,
+                shape = RoundedCornerShape(24.dp),
                 title = { Text("⚠️ Saara Data Delete Hoga", fontWeight = FontWeight.Bold, color = AlertRed) },
                 text = {
                     Column {
-                        Text("Yeh action undo nahi ho sakta. Saare customers, orders, payments, inventory aur expenses delete honge.", color = Color.White, fontWeight = FontWeight.Bold)
+                        Text("Yeh action undo nahi ho sakta. Saare customers, orders, payments, inventory aur expenses delete honge.", color = DarkBlue, fontWeight = FontWeight.Bold)
                         Spacer(Modifier.height(12.dp))
                         OutlinedTextField(
                             value = deleteConfirmText,
@@ -522,17 +522,17 @@ fun SettingsScreen(
                         ),
                         shape = RoundedCornerShape(14.dp)
                     ) {
-                        Text("Haan, Delete Karo", fontWeight = FontWeight.Bold)
+                        Text("Haan, Delete Karo", fontWeight = FontWeight.Bold, color = Color.White)
                     }
                 },
                 dismissButton = {
                     OutlinedButton(
                         onClick = { showDeleteConfirmDialog = false },
-                        border = BorderStroke(2.dp, Yellow),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Yellow),
+                        border = BorderStroke(2.dp, DarkBlue),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = DarkBlue),
                         shape = RoundedCornerShape(14.dp)
                     ) {
-                        Text("Cancel", fontWeight = FontWeight.Bold, color = Yellow)
+                        Text("Cancel", fontWeight = FontWeight.Bold, color = DarkBlue)
                     }
                 }
             )
@@ -542,11 +542,11 @@ fun SettingsScreen(
         if (showLogoutConfirmDialog) {
             AlertDialog(
                 onDismissRequest = { showLogoutConfirmDialog = false },
-                containerColor = DarkBlue,
-                shape = RoundedCornerShape(20.dp),
-                title = { Text("Logout Karein?", fontWeight = FontWeight.Bold, color = Yellow) },
+                containerColor = Color.White,
+                shape = RoundedCornerShape(24.dp),
+                title = { Text("Logout Karein?", fontWeight = FontWeight.Bold, color = DarkBlue) },
                 text = {
-                    Text("Aap session se logout ho jayenge. Local data cache mein mehfooz rahega.", color = Color.White, fontWeight = FontWeight.Bold)
+                    Text("Aap session se logout ho jayenge. Local data cache mein mehfooz rahega.", color = DarkBlue, fontWeight = FontWeight.Bold)
                 },
                 confirmButton = {
                     Button(
@@ -560,17 +560,17 @@ fun SettingsScreen(
                         ),
                         shape = RoundedCornerShape(14.dp)
                     ) {
-                        Text("Logout", fontWeight = FontWeight.Bold)
+                        Text("Logout", fontWeight = FontWeight.Bold, color = Color.White)
                     }
                 },
                 dismissButton = {
                     OutlinedButton(
                         onClick = { showLogoutConfirmDialog = false },
-                        border = BorderStroke(2.dp, Yellow),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Yellow),
+                        border = BorderStroke(2.dp, DarkBlue),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = DarkBlue),
                         shape = RoundedCornerShape(14.dp)
                     ) {
-                        Text("Cancel", fontWeight = FontWeight.Bold, color = Yellow)
+                        Text("Cancel", fontWeight = FontWeight.Bold, color = DarkBlue)
                     }
                 }
             )

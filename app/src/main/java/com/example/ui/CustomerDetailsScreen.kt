@@ -319,7 +319,7 @@ fun CustomerDetailsScreen(
         }
     }
 
-    // Statement AlertDialog (Dark Blue background, Yellow header, White monospace text)
+    // Statement AlertDialog (White container, Dark Blue header, Dark Blue monospace text)
     if (showStatementDialog) {
         val statementText = remember(currentCustomer, orders, payments) {
             generateCustomerStatement(currentCustomer, orders, payments)
@@ -327,17 +327,17 @@ fun CustomerDetailsScreen(
 
         AlertDialog(
             onDismissRequest = { showStatementDialog = false },
-            containerColor = DarkBlue,
-            shape = RoundedCornerShape(20.dp),
+            containerColor = Color.White,
+            shape = RoundedCornerShape(24.dp),
             title = {
-                Text("Customer Statement", fontWeight = FontWeight.Bold, color = Yellow)
+                Text("Customer Statement", fontWeight = FontWeight.Bold, color = DarkBlue)
             },
             text = {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .heightIn(max = 360.dp)
-                        .background(Color.White, RoundedCornerShape(14.dp))
+                        .background(Color(0xFFF5F7FA), RoundedCornerShape(14.dp))
                         .padding(14.dp)
                         .verticalScroll(rememberScrollState())
                 ) {
@@ -384,12 +384,12 @@ fun CustomerDetailsScreen(
             dismissButton = {
                 OutlinedButton(
                     onClick = { showStatementDialog = false },
-                    border = BorderStroke(2.dp, Yellow),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Yellow),
+                    border = BorderStroke(2.dp, DarkBlue),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = DarkBlue),
                     shape = RoundedCornerShape(14.dp),
                     modifier = Modifier.height(48.dp)
                 ) {
-                    Text("Close", fontWeight = FontWeight.Bold, color = Yellow)
+                    Text("Close", fontWeight = FontWeight.Bold, color = DarkBlue)
                 }
             }
         )

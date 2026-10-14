@@ -21,7 +21,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -119,8 +122,33 @@ fun AnimatedCenterDialog(
     saveEnabled: Boolean = true,
     content: @Composable ColumnScope.() -> Unit
 ) {
+    val configuration = LocalConfiguration.current
+    val maxDialogHeight = (configuration.screenHeightDp * 0.88f).dp
+    val coroutineScope = rememberCoroutineScope()
+    var visible by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        visible = true
+    }
+
+    val dismissWithAnimation: () -> Unit = {
+        coroutineScope.launch {
+            visible = false
+            delay(200)
+            onDismiss()
+        }
+    }
+
+    val cancelWithAnimation: () -> Unit = {
+        coroutineScope.launch {
+            visible = false
+            delay(200)
+            onCancel()
+        }
+    }
+
     Dialog(
-        onDismissRequest = onDismiss,
+        onDismissRequest = dismissWithAnimation,
         properties = DialogProperties(
             usePlatformDefaultWidth = false,
             decorFitsSystemWindows = false
@@ -133,15 +161,10 @@ fun AnimatedCenterDialog(
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
-                    onClick = onDismiss
+                    onClick = dismissWithAnimation
                 ),
             contentAlignment = Alignment.Center
         ) {
-            var visible by remember { mutableStateOf(false) }
-            LaunchedEffect(Unit) {
-                visible = true
-            }
-
             AnimatedVisibility(
                 visible = visible,
                 enter = fadeIn(animationSpec = tween(300, easing = FastOutSlowInEasing)) +
@@ -152,7 +175,7 @@ fun AnimatedCenterDialog(
                 Card(
                     modifier = Modifier
                         .fillMaxWidth(0.92f)
-                        .fillMaxHeight(0.88f)
+                        .heightIn(max = maxDialogHeight)
                         .imePadding()
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
@@ -162,8 +185,12 @@ fun AnimatedCenterDialog(
                     colors = CardDefaults.cardColors(containerColor = Color.White),
                     elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
                 ) {
-                    Column(modifier = Modifier.fillMaxSize()) {
-                        // Top Header (Dark Blue)
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = maxDialogHeight)
+                    ) {
+                        // Top Header (Dark Blue) - Fixed
                         Surface(
                             modifier = Modifier.fillMaxWidth(),
                             color = DarkBlue
@@ -196,7 +223,7 @@ fun AnimatedCenterDialog(
                                     )
                                 }
                                 IconButton(
-                                    onClick = onDismiss,
+                                    onClick = dismissWithAnimation,
                                     modifier = Modifier.size(36.dp)
                                 ) {
                                     Icon(
@@ -208,10 +235,10 @@ fun AnimatedCenterDialog(
                             }
                         }
 
-                        // Scrollable fields
+                        // Scrollable fields (wraps content, scrolls when reaching max height)
                         Column(
                             modifier = Modifier
-                                .weight(1f)
+                                .weight(1f, fill = false)
                                 .fillMaxWidth()
                                 .verticalScroll(rememberScrollState())
                                 .padding(20.dp),
@@ -220,7 +247,7 @@ fun AnimatedCenterDialog(
                             content()
                         }
 
-                        // Bottom Actions: Cancel (Dark Blue outline) and Save (Yellow filled, Dark Blue text)
+                        // Bottom Actions: Cancel (Dark Blue outline) and Save (Yellow filled, Dark Blue text) - Fixed
                         if (onSave != null) {
                             HorizontalDivider(color = Color(0xFFEEEEEE), thickness = 1.dp)
                             Row(
@@ -230,7 +257,7 @@ fun AnimatedCenterDialog(
                                 horizontalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
                                 OutlinedButton(
-                                    onClick = onCancel,
+                                    onClick = cancelWithAnimation,
                                     modifier = Modifier
                                         .weight(1f)
                                         .height(52.dp),

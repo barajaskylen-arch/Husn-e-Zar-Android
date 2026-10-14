@@ -166,8 +166,7 @@ class DashboardViewModel(private val appViewModel: AppViewModel) : ViewModel() {
             val mExpenses = expenses.filter { it.date.startsWith(monthKey) }.sumOf { it.amount }
             val mOrders = orders.filter { it.orderDate.startsWith(monthKey) }
             val mSales = mOrders.sumOf { it.totalAmount }
-            val mPayments = payments.filter { it.date.startsWith(monthKey) }.sumOf { it.amount }
-            val mRevenue = mOrders.sumOf { it.paidAmount } + mPayments
+            val mRevenue = mSales - mExpenses
 
             reports.add(
                 MonthReport(

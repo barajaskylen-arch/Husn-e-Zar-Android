@@ -1,23 +1,32 @@
 package com.example.ui
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.ui.theme.*
+import kotlinx.coroutines.delay
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -243,54 +252,12 @@ fun DashboardScreen(
                     Text("Last 6 Months Report", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = DarkBlue)
                     Spacer(Modifier.height(8.dp))
                 }
-                items(state.historicalTrends) { report ->
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = DarkBlue),
-                        border = BorderStroke(1.dp, Yellow.copy(alpha = 0.3f)),
-                        shape = RoundedCornerShape(20.dp),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
-                    ) {
-                        Column(Modifier.padding(16.dp)) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(report.monthLabel, fontWeight = FontWeight.Bold, color = Yellow, fontSize = 15.sp)
-                                Surface(
-                                    color = Yellow.copy(alpha = 0.15f),
-                                    shape = RoundedCornerShape(8.dp)
-                                ) {
-                                    Text(
-                                        "${report.jarsCreated} Jars Created",
-                                        color = Yellow,
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 11.sp,
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                                    )
-                                }
-                            }
-                            Spacer(Modifier.height(10.dp))
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Column {
-                                    Text("Total Sale", color = Color.White.copy(alpha = 0.7f), fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                                    Text(formatMoney(report.totalSale), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                                }
-                                Column {
-                                    Text("Total Expense", color = Color.White.copy(alpha = 0.7f), fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                                    Text(formatMoney(report.totalExpense), color = AlertRed, fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                                }
-                                Column(horizontalAlignment = Alignment.End) {
-                                    Text("Total Revenue", color = Color.White.copy(alpha = 0.7f), fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                                    Text(formatMoney(report.totalRevenue), color = SuccessGreen, fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                                }
-                            }
-                        }
-                    }
+                itemsIndexed(state.historicalTrends, key = { _, report -> report.monthLabel }) { index, report ->
+                    MonthReportCard(
+                        report = report,
+                        index = index,
+                        isCurrentMonth = index == 0
+                    )
                 }
             }
 
@@ -402,6 +369,295 @@ fun MetricCard(
             Text(title, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = Color.White.copy(alpha = 0.75f))
             Spacer(Modifier.height(6.dp))
             Text(value, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = valueColor)
+        }
+    }
+}
+
+@Composable
+fun MonthReportCard(
+    report: MonthReport,
+    index: Int,
+    isCurrentMonth: Boolean
+) {
+    val isAllZero = report.jarsCreated == 0 && report.totalExpense == 0.0 && report.totalSale == 0.0 && report.totalRevenue == 0.0
+    val hasAnimated = rememberSaveable(report.monthLabel) { mutableStateOf(false) }
+    val animProgress = remember { Animatable(if (hasAnimated.value) 1f else 0f) }
+
+    LaunchedEffect(Unit) {
+        if (!hasAnimated.value) {
+            delay(index * 70L)
+            animProgress.animateTo(
+                targetValue = 1f,
+                animationSpec = tween(durationMillis = 700, easing = FastOutSlowInEasing)
+            )
+            hasAnimated.value = true
+        }
+    }
+
+    val progressValue = animProgress.value
+    val displayedJars = (report.jarsCreated * progressValue).toInt()
+    val displayedSale = report.totalSale * progressValue
+    val displayedExpense = report.totalExpense * progressValue
+    val displayedRevenue = report.totalRevenue * progressValue
+
+    val expenseRatio = if (report.totalSale > 0.0) {
+        (report.totalExpense / report.totalSale).toFloat()
+    } else {
+        0f
+    }
+    val clampedRatio = expenseRatio.coerceIn(0f, 1f)
+    val progressColor = if (report.totalExpense <= report.totalSale) SuccessGreen else AlertRed
+    val percentageLabel = if (report.totalSale > 0.0) {
+        "Expense = ${(expenseRatio * 100).toInt()}% of Sale"
+    } else {
+        "Expense = 0% of Sale"
+    }
+
+    val miniBoxBg = Color(0xFF143870)
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .graphicsLayer {
+                val currentP = if (hasAnimated.value) 1f else progressValue
+                alpha = if (isAllZero) 0.7f * currentP else currentP
+                translationY = if (hasAnimated.value) 0f else (1f - currentP) * 35f
+            },
+        colors = CardDefaults.cardColors(containerColor = DarkBlue),
+        border = BorderStroke(1.dp, CardBorder),
+        shape = RoundedCornerShape(20.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+    ) {
+        Column {
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                color = Yellow
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 10.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = report.monthLabel,
+                        fontWeight = FontWeight.Bold,
+                        color = DarkBlue,
+                        fontSize = 16.sp
+                    )
+                    if (isCurrentMonth) {
+                        Surface(
+                            color = DarkBlue,
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Text(
+                                text = "Current",
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 11.sp,
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp)
+                            )
+                        }
+                    }
+                }
+            }
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(14.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Surface(
+                        modifier = Modifier.weight(1f),
+                        color = miniBoxBg,
+                        shape = RoundedCornerShape(14.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Surface(
+                                color = Yellow.copy(alpha = 0.18f),
+                                shape = RoundedCornerShape(8.dp),
+                                modifier = Modifier.size(28.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        imageVector = Icons.Default.Inventory2,
+                                        contentDescription = null,
+                                        tint = Yellow,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                            }
+                            Spacer(Modifier.height(8.dp))
+                            Text(
+                                text = "Jars Created",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White.copy(alpha = 0.75f)
+                            )
+                            Spacer(Modifier.height(2.dp))
+                            Text(
+                                text = "$displayedJars",
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Yellow
+                            )
+                        }
+                    }
+
+                    Surface(
+                        modifier = Modifier.weight(1f),
+                        color = miniBoxBg,
+                        shape = RoundedCornerShape(14.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Surface(
+                                color = Color.White.copy(alpha = 0.18f),
+                                shape = RoundedCornerShape(8.dp),
+                                modifier = Modifier.size(28.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        imageVector = Icons.Default.ShoppingCart,
+                                        contentDescription = null,
+                                        tint = Color.White,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                            }
+                            Spacer(Modifier.height(8.dp))
+                            Text(
+                                text = "Total Sale",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White.copy(alpha = 0.75f)
+                            )
+                            Spacer(Modifier.height(2.dp))
+                            Text(
+                                text = formatMoney(displayedSale),
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        }
+                    }
+                }
+
+                Spacer(Modifier.height(10.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Surface(
+                        modifier = Modifier.weight(1f),
+                        color = miniBoxBg,
+                        shape = RoundedCornerShape(14.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Surface(
+                                color = AlertRed.copy(alpha = 0.18f),
+                                shape = RoundedCornerShape(8.dp),
+                                modifier = Modifier.size(28.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        imageVector = Icons.Default.AccountBalanceWallet,
+                                        contentDescription = null,
+                                        tint = AlertRed,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                            }
+                            Spacer(Modifier.height(8.dp))
+                            Text(
+                                text = "Total Expense",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White.copy(alpha = 0.75f)
+                            )
+                            Spacer(Modifier.height(2.dp))
+                            Text(
+                                text = formatMoney(displayedExpense),
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = AlertRed
+                            )
+                        }
+                    }
+
+                    val isRevenuePositive = report.totalRevenue >= 0.0
+                    val revenueColor = if (isRevenuePositive) SuccessGreen else AlertRed
+                    val revenueBorder = if (isRevenuePositive) SuccessGreen.copy(alpha = 0.6f) else AlertRed.copy(alpha = 0.6f)
+                    val revenueIcon = if (isRevenuePositive) Icons.Default.TrendingUp else Icons.Default.TrendingDown
+
+                    Surface(
+                        modifier = Modifier.weight(1f),
+                        color = miniBoxBg,
+                        shape = RoundedCornerShape(14.dp),
+                        border = BorderStroke(1.5.dp, revenueBorder)
+                    ) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Surface(
+                                color = revenueColor.copy(alpha = 0.18f),
+                                shape = RoundedCornerShape(8.dp),
+                                modifier = Modifier.size(28.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        imageVector = revenueIcon,
+                                        contentDescription = null,
+                                        tint = revenueColor,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                            }
+                            Spacer(Modifier.height(8.dp))
+                            Text(
+                                text = "Total Revenue",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = revenueColor
+                            )
+                            Spacer(Modifier.height(2.dp))
+                            Text(
+                                text = formatMoney(displayedRevenue),
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = revenueColor
+                            )
+                        }
+                    }
+                }
+
+                Spacer(Modifier.height(14.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = percentageLabel,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White.copy(alpha = 0.8f)
+                    )
+                }
+                Spacer(Modifier.height(6.dp))
+                LinearProgressIndicator(
+                    progress = { clampedRatio * (if (hasAnimated.value) 1f else progressValue) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(7.dp)
+                        .clip(RoundedCornerShape(4.dp)),
+                    color = progressColor,
+                    trackColor = Color.White.copy(alpha = 0.15f)
+                )
+            }
         }
     }
 }

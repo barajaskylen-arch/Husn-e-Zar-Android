@@ -9,9 +9,11 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -201,30 +203,39 @@ fun OrdersScreen(
         )
     }
 
-    // Receipt AlertDialog (Dark Blue container with Yellow highlights)
+    // Receipt AlertDialog (White container with Dark Blue header and text)
     if (showReceiptDialog) {
         AlertDialog(
             onDismissRequest = { showReceiptDialog = false },
-            containerColor = DarkBlue,
-            shape = RoundedCornerShape(20.dp),
+            containerColor = Color.White,
+            shape = RoundedCornerShape(24.dp),
             title = {
                 Text(
                     text = receiptDialogTitle,
-                    color = Yellow,
+                    color = DarkBlue,
                     fontWeight = FontWeight.Bold,
                     style = MaterialTheme.typography.titleLarge
                 )
             },
             text = {
-                SelectionContainer {
-                    Text(
-                        text = receiptText,
-                        fontFamily = FontFamily.Monospace,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White,
-                        lineHeight = 18.sp
-                    )
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 360.dp)
+                        .background(Color(0xFFF5F7FA), RoundedCornerShape(14.dp))
+                        .padding(14.dp)
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    SelectionContainer {
+                        Text(
+                            text = receiptText,
+                            fontFamily = FontFamily.Monospace,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = DarkBlue,
+                            lineHeight = 18.sp
+                        )
+                    }
                 }
             },
             confirmButton = {
@@ -259,12 +270,12 @@ fun OrdersScreen(
             dismissButton = {
                 OutlinedButton(
                     onClick = { showReceiptDialog = false },
-                    border = BorderStroke(2.dp, Yellow),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Yellow),
+                    border = BorderStroke(2.dp, DarkBlue),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = DarkBlue),
                     shape = RoundedCornerShape(14.dp),
                     modifier = Modifier.height(48.dp)
                 ) {
-                    Text("Close", fontWeight = FontWeight.Bold, color = Yellow)
+                    Text("Close", fontWeight = FontWeight.Bold, color = DarkBlue)
                 }
             }
         )
