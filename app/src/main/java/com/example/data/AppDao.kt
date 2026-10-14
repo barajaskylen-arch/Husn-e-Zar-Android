@@ -71,6 +71,18 @@ interface AppDao {
     @Query("DELETE FROM customers WHERE id = :id")
     suspend fun deleteCustomerById(id: String)
 
+    @Query("DELETE FROM orders WHERE id = :id")
+    suspend fun deleteOrderById(id: String)
+
+    @Query("DELETE FROM customer_payments WHERE id = :id")
+    suspend fun deleteCustomerPaymentById(id: String)
+
+    @Query("DELETE FROM inventory_batches WHERE id = :id")
+    suspend fun deleteInventoryBatchById(id: String)
+
+    @Query("DELETE FROM expenses WHERE id = :id")
+    suspend fun deleteExpenseById(id: String)
+
     // Helper queries
     @Query("SELECT * FROM customers WHERE id = :id")
     suspend fun getCustomerById(id: String): Customer?

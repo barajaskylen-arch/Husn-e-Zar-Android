@@ -246,7 +246,9 @@ interface SupabaseApi {
     // Customers
     @GET("rest/v1/customers")
     suspend fun getCustomers(
-        @Query("select") select: String = "*"
+        @Query("select") select: String = "*",
+        @Query("limit") limit: Int? = null,
+        @Query("offset") offset: Int? = null
     ): List<CustomerDto>
 
     @POST("rest/v1/customers")
@@ -268,7 +270,9 @@ interface SupabaseApi {
     // Orders
     @GET("rest/v1/orders")
     suspend fun getOrders(
-        @Query("select") select: String = "*"
+        @Query("select") select: String = "*",
+        @Query("limit") limit: Int? = null,
+        @Query("offset") offset: Int? = null
     ): List<OrderDto>
 
     @POST("rest/v1/orders")
@@ -290,7 +294,9 @@ interface SupabaseApi {
     // Inventory Batches
     @GET("rest/v1/inventory_batches")
     suspend fun getInventoryBatches(
-        @Query("select") select: String = "*"
+        @Query("select") select: String = "*",
+        @Query("limit") limit: Int? = null,
+        @Query("offset") offset: Int? = null
     ): List<InventoryBatchDto>
 
     @POST("rest/v1/inventory_batches")
@@ -312,7 +318,9 @@ interface SupabaseApi {
     // Expenses
     @GET("rest/v1/expenses")
     suspend fun getExpenses(
-        @Query("select") select: String = "*"
+        @Query("select") select: String = "*",
+        @Query("limit") limit: Int? = null,
+        @Query("offset") offset: Int? = null
     ): List<ExpenseDto>
 
     @POST("rest/v1/expenses")
@@ -334,7 +342,9 @@ interface SupabaseApi {
     // Daily Tasks
     @GET("rest/v1/daily_tasks")
     suspend fun getDailyTasks(
-        @Query("select") select: String = "*"
+        @Query("select") select: String = "*",
+        @Query("limit") limit: Int? = null,
+        @Query("offset") offset: Int? = null
     ): List<DailyTaskDto>
 
     @POST("rest/v1/daily_tasks")
@@ -356,7 +366,9 @@ interface SupabaseApi {
     // Customer Payments
     @GET("rest/v1/customer_payments")
     suspend fun getCustomerPayments(
-        @Query("select") select: String = "*"
+        @Query("select") select: String = "*",
+        @Query("limit") limit: Int? = null,
+        @Query("offset") offset: Int? = null
     ): List<CustomerPaymentDto>
 
     @POST("rest/v1/customer_payments")

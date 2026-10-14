@@ -170,10 +170,26 @@ class SupabaseAuth(private val context: Context) {
                 _isLoggedInFlow.value = true
                 newAccessToken
             } else {
+                if (response.code == 400 || response.code == 401) {
+                    // Invalid or expired refresh token: clear tokens and logout to redirect to login
+                    logout()
+                }
                 null
             }
         } catch (e: Exception) {
+            // Network error / timeout: do NOT logout, keep existing tokens
             null
+        }
+    }
+
+    suspend fun forceRefreshToken(): String? = withContext(Dispatchers.IO) {
+        refreshMutex.withLock {
+            val refreshToken = prefs.getString(KEY_REFRESH_TOKEN, null)
+            if (refreshToken.isNullOrBlank()) {
+                logout()
+                return@withLock null
+            }
+            executeRefreshToken(refreshToken)
         }
     }
 

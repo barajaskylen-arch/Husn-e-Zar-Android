@@ -62,6 +62,7 @@ fun SettingsScreen(
     val expenses by appViewModel.expenses.collectAsStateWithLifecycle()
     val isSyncing by appViewModel.isSyncing.collectAsStateWithLifecycle()
     val lastSyncedTime by appViewModel.lastSyncedTime.collectAsStateWithLifecycle()
+    val pendingUploads by appViewModel.pendingUploadsCount.collectAsStateWithLifecycle()
 
     var showLogoutConfirmDialog by remember { mutableStateOf(false) }
     var showDeleteConfirmDialog by remember { mutableStateOf(false) }
@@ -197,6 +198,11 @@ fun SettingsScreen(
                             value = appViewModel.supabaseAuth.getUserEmail().ifEmpty { "Connected" }
                         )
                         Spacer(Modifier.height(6.dp))
+                        InfoRow(
+                            label = "Pending uploads",
+                            value = "$pendingUploads"
+                        )
+                        Spacer(Modifier.height(6.dp))
                         val lastSyncedStr = if (lastSyncedTime == 0L) {
                             "Kabhi nahi"
                         } else {
@@ -212,16 +218,17 @@ fun SettingsScreen(
                                 scope.launch {
                                     appViewModel.syncNow { result ->
                                         result.fold(
-                                            onSuccess = {
+                                            onSuccess = { msg ->
                                                 snackbarColor = SuccessGreen
                                                 scope.launch {
-                                                    snackbarHostState.showSnackbar("✅ Supabase sync mukammal ho gaya")
+                                                    snackbarHostState.showSnackbar("✅ $msg")
                                                 }
                                             },
                                             onFailure = { ex ->
                                                 snackbarColor = AlertRed
                                                 scope.launch {
-                                                    snackbarHostState.showSnackbar("❌ Sync fail: ${ex.localizedMessage ?: "Network masla"}")
+                                                    val reason = ex.localizedMessage?.ifBlank { "Network ya server ka masla aaya" } ?: "Network ya server ka masla aaya"
+                                                    snackbarHostState.showSnackbar("❌ Sync fail: $reason")
                                                 }
                                             }
                                         )

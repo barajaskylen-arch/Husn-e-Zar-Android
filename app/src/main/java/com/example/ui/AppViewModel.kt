@@ -23,6 +23,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     val isLoggedIn: StateFlow<Boolean> = supabaseAuth.isLoggedInFlow
     val isSyncing: StateFlow<Boolean> = syncManager.isSyncing
     val lastSyncedTime: StateFlow<Long> = syncManager.lastSyncedTime
+    val pendingUploadsCount: StateFlow<Int> = syncManager.pendingUploadsCount
 
     fun syncNow(onResult: ((Result<String>) -> Unit)? = null) {
         viewModelScope.launch {
@@ -59,27 +60,30 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     private val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
 
     init {
-        if (!prefs.getBoolean("default_tasks_loaded", false)) {
-            viewModelScope.launch {
-                val today = dateFormat.format(Date())
-                val defaultTasks = listOf(
-                    DailyTask(id = UUID.randomUUID().toString(), date = today, taskName = "Social Media Post", isCompleted = false, description = "Social Media"),
-                    DailyTask(id = UUID.randomUUID().toString(), date = today, taskName = "Customer Follow-up", isCompleted = false, description = "Customer Follow-up"),
-                    DailyTask(id = UUID.randomUUID().toString(), date = today, taskName = "Order Packing", isCompleted = false, description = "Production"),
-                    DailyTask(id = UUID.randomUUID().toString(), date = today, taskName = "Stock Check", isCompleted = false, description = "Admin"),
-                    DailyTask(id = UUID.randomUUID().toString(), date = today, taskName = "Payment Collection", isCompleted = false, description = "Admin"),
-                    DailyTask(id = UUID.randomUUID().toString(), date = today, taskName = "New Customer Outreach", isCompleted = false, description = "Customer Follow-up")
-                )
-                defaultTasks.forEach { task: DailyTask ->
-                    repository.addDailyTask(task)
+        // Wire up default tasks hook: ONLY triggered after first successful sync when both local and remote are empty
+        syncManager.onDefaultTasksNeeded = {
+            if (!prefs.getBoolean("default_tasks_loaded", false)) {
+                viewModelScope.launch {
+                    val today = dateFormat.format(Date())
+                    val defaultTasks = listOf(
+                        DailyTask(id = UUID.randomUUID().toString(), date = today, taskName = "Social Media Post", isCompleted = false, description = "Social Media"),
+                        DailyTask(id = UUID.randomUUID().toString(), date = today, taskName = "Customer Follow-up", isCompleted = false, description = "Customer Follow-up"),
+                        DailyTask(id = UUID.randomUUID().toString(), date = today, taskName = "Order Packing", isCompleted = false, description = "Production"),
+                        DailyTask(id = UUID.randomUUID().toString(), date = today, taskName = "Stock Check", isCompleted = false, description = "Admin"),
+                        DailyTask(id = UUID.randomUUID().toString(), date = today, taskName = "Payment Collection", isCompleted = false, description = "Admin"),
+                        DailyTask(id = UUID.randomUUID().toString(), date = today, taskName = "New Customer Outreach", isCompleted = false, description = "Customer Follow-up")
+                    )
+                    defaultTasks.forEach { task: DailyTask ->
+                        repository.addDailyTask(task)
+                    }
+                    prefs.edit().putBoolean("default_tasks_loaded", true).apply()
+                    updateStreakStatus()
                 }
-                prefs.edit().putBoolean("default_tasks_loaded", true).apply()
-                updateStreakStatus()
             }
-        } else {
-            viewModelScope.launch {
-                updateStreakStatus()
-            }
+        }
+
+        viewModelScope.launch {
+            updateStreakStatus()
         }
 
         viewModelScope.launch {
