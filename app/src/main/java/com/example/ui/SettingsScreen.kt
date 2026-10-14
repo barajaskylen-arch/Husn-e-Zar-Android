@@ -60,7 +60,10 @@ fun SettingsScreen(
     val orders by appViewModel.orders.collectAsStateWithLifecycle()
     val batches by appViewModel.inventoryBatches.collectAsStateWithLifecycle()
     val expenses by appViewModel.expenses.collectAsStateWithLifecycle()
+    val isSyncing by appViewModel.isSyncing.collectAsStateWithLifecycle()
+    val lastSyncedTime by appViewModel.lastSyncedTime.collectAsStateWithLifecycle()
 
+    var showLogoutConfirmDialog by remember { mutableStateOf(false) }
     var showDeleteConfirmDialog by remember { mutableStateOf(false) }
     var deleteConfirmText by remember { mutableStateOf("") }
 
@@ -154,6 +157,112 @@ fun SettingsScreen(
                         InfoRow(label = "Total Batches", value = "${batches.size}")
                         Spacer(Modifier.height(6.dp))
                         InfoRow(label = "Total Expenses", value = "${expenses.size}")
+                    }
+                }
+            }
+
+            // CLOUD SYNC & ACCOUNT CARD
+            item {
+                Card(
+                    border = BorderStroke(1.dp, CardBorder),
+                    colors = CardDefaults.cardColors(containerColor = NavyMedium),
+                    shape = RoundedCornerShape(14.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(Modifier.padding(16.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Cloud Sync (Supabase)",
+                                color = Gold,
+                                fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                            if (isSyncing) {
+                                CircularProgressIndicator(
+                                    color = Gold,
+                                    modifier = Modifier.size(18.dp),
+                                    strokeWidth = 2.dp
+                                )
+                            }
+                        }
+                        Spacer(Modifier.height(12.dp))
+                        InfoRow(
+                            label = "Admin Account",
+                            value = appViewModel.supabaseAuth.getUserEmail().ifEmpty { "Connected" }
+                        )
+                        Spacer(Modifier.height(6.dp))
+                        val lastSyncedStr = if (lastSyncedTime == 0L) {
+                            "Kabhi nahi"
+                        } else {
+                            SimpleDateFormat("dd MMM, hh:mm a", Locale.getDefault()).format(Date(lastSyncedTime))
+                        }
+                        InfoRow(label = "Last Synced", value = lastSyncedStr)
+
+                        Spacer(Modifier.height(16.dp))
+
+                        // Button 1: Sync Now
+                        Button(
+                            onClick = {
+                                scope.launch {
+                                    appViewModel.syncNow { result ->
+                                        result.fold(
+                                            onSuccess = {
+                                                snackbarColor = ProfitGreen
+                                                scope.launch {
+                                                    snackbarHostState.showSnackbar("✅ Supabase sync mukammal ho gaya")
+                                                }
+                                            },
+                                            onFailure = { ex ->
+                                                snackbarColor = ExpenseRed
+                                                scope.launch {
+                                                    snackbarHostState.showSnackbar("❌ Sync fail: ${ex.localizedMessage ?: "Network masla"}")
+                                                }
+                                            }
+                                        )
+                                    }
+                                }
+                            },
+                            enabled = !isSyncing,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Gold,
+                                contentColor = NavyDark,
+                                disabledContainerColor = Gold.copy(alpha = 0.4f),
+                                disabledContentColor = NavyDark.copy(alpha = 0.5f)
+                            ),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            if (isSyncing) {
+                                CircularProgressIndicator(
+                                    color = NavyDark,
+                                    modifier = Modifier.size(18.dp),
+                                    strokeWidth = 2.dp
+                                )
+                                Spacer(Modifier.width(8.dp))
+                                Text("Sync ho raha hai...", fontWeight = FontWeight.Bold)
+                            } else {
+                                Text("🔄 Sync Now", fontWeight = FontWeight.Bold)
+                            }
+                        }
+
+                        Spacer(Modifier.height(10.dp))
+
+                        // Button 2: Logout
+                        OutlinedButton(
+                            onClick = { showLogoutConfirmDialog = true },
+                            border = BorderStroke(1.dp, ExpenseRed),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = ExpenseRed
+                            ),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("🚪 Logout", fontWeight = FontWeight.Bold)
+                        }
                     }
                 }
             }
@@ -423,6 +532,43 @@ fun SettingsScreen(
                 dismissButton = {
                     OutlinedButton(
                         onClick = { showDeleteConfirmDialog = false },
+                        border = BorderStroke(1.dp, NavyBorder),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = TextSecondary),
+                        shape = RoundedCornerShape(10.dp)
+                    ) {
+                        Text("Cancel")
+                    }
+                }
+            )
+        }
+
+        // Logout Confirmation Dialog
+        if (showLogoutConfirmDialog) {
+            AlertDialog(
+                onDismissRequest = { showLogoutConfirmDialog = false },
+                containerColor = NavyMedium,
+                title = { Text("Logout Karein?", fontWeight = FontWeight.Bold, color = Gold) },
+                text = {
+                    Text("Aap session se logout ho jayenge. Local data cache mein mehfooz rahega.", color = White)
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            showLogoutConfirmDialog = false
+                            appViewModel.logout()
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = ExpenseRed,
+                            contentColor = White
+                        ),
+                        shape = RoundedCornerShape(10.dp)
+                    ) {
+                        Text("Logout")
+                    }
+                },
+                dismissButton = {
+                    OutlinedButton(
+                        onClick = { showLogoutConfirmDialog = false },
                         border = BorderStroke(1.dp, NavyBorder),
                         colors = ButtonDefaults.outlinedButtonColors(contentColor = TextSecondary),
                         shape = RoundedCornerShape(10.dp)

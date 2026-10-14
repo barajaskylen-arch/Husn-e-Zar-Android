@@ -1,13 +1,16 @@
 package com.example.data
 
+import com.example.data.remote.SyncManager
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.flow.map
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 
-class AppRepository(private val dao: AppDao) {
+class AppRepository(
+    private val dao: AppDao,
+    private val syncManager: SyncManager? = null
+) {
     val customers: Flow<List<Customer>> = dao.getAllCustomers()
     val orders: Flow<List<Order>> = dao.getAllOrders()
     val inventoryBatches: Flow<List<InventoryBatch>> = dao.getAllInventoryBatches()
@@ -23,18 +26,22 @@ class AppRepository(private val dao: AppDao) {
 
     suspend fun addCustomer(customer: Customer) {
         dao.insertCustomer(customer)
+        syncManager?.syncUpsertCustomer(customer)
     }
 
     suspend fun updateCustomer(customer: Customer) {
         dao.updateCustomer(customer)
+        syncManager?.syncUpsertCustomer(customer)
     }
 
     suspend fun deleteCustomer(id: String) {
         dao.deleteCustomerById(id)
+        syncManager?.syncDeleteCustomer(id)
     }
 
     suspend fun updateOrder(oldOrder: Order, newOrder: Order) {
         dao.updateOrder(newOrder)
+        syncManager?.syncUpsertOrder(newOrder)
         
         // Correct the customer balance
         val diff = newOrder.pendingAmount - oldOrder.pendingAmount
@@ -43,32 +50,35 @@ class AppRepository(private val dao: AppDao) {
             if (customer != null) {
                 val updated = customer.copy(pendingBalance = customer.pendingBalance + diff)
                 dao.updateCustomer(updated)
+                syncManager?.syncUpsertCustomer(updated)
             }
         }
     }
 
     suspend fun addInventoryBatch(batch: InventoryBatch) {
         dao.insertInventoryBatch(batch)
+        syncManager?.syncUpsertBatch(batch)
     }
 
     suspend fun getLatestInventoryBatch(): InventoryBatch? {
-        // Return latest
         return dao.getAllInventoryBatches().firstOrNull()?.firstOrNull()
     }
 
     suspend fun addOrder(order: Order) {
-        // Also update customer pending balance?
         dao.insertOrder(order)
+        syncManager?.syncUpsertOrder(order)
         val customer = dao.getCustomerById(order.customerId)
         if (customer != null) {
             val updated = customer.copy(pendingBalance = customer.pendingBalance + order.pendingAmount)
             dao.updateCustomer(updated)
+            syncManager?.syncUpsertCustomer(updated)
         }
     }
 
     suspend fun recordCustomerPayment(payment: CustomerPayment, updateCustomerBalance: Boolean = true) {
         dao.insertCustomerPayment(payment)
-        // Update customer balance
+        syncManager?.syncUpsertCustomerPayment(payment)
+        
         if (updateCustomerBalance) {
             val customer = dao.getCustomerById(payment.customerId)
             if (customer != null) {
@@ -76,32 +86,34 @@ class AppRepository(private val dao: AppDao) {
                     pendingBalance = maxOf(0.0, customer.pendingBalance - payment.amount)
                 )
                 dao.updateCustomer(updated)
+                syncManager?.syncUpsertCustomer(updated)
             }
         }
-        
-        // Let's append this to their open orders if required by schema, 
-        // to simplify, we just update the pending balance globally as requested by spec:
-        // "saving this entry must reduce that specific customer's pendingBalance across the app and record it into the financial registry"
     }
 
     suspend fun addExpense(expense: Expense) {
         dao.insertExpense(expense)
+        syncManager?.syncUpsertExpense(expense)
     }
 
     suspend fun addDailyTask(task: DailyTask) {
         dao.insertDailyTask(task)
+        syncManager?.syncUpsertDailyTask(task)
     }
 
     suspend fun updateDailyTask(task: DailyTask) {
         dao.updateDailyTask(task)
+        syncManager?.syncUpsertDailyTask(task)
     }
 
     suspend fun deleteDailyTask(task: DailyTask) {
         dao.deleteDailyTask(task)
+        syncManager?.syncDeleteDailyTask(task.id)
     }
 
     suspend fun deleteDailyTaskById(id: String) {
         dao.deleteDailyTaskById(id)
+        syncManager?.syncDeleteDailyTask(id)
     }
 
     suspend fun getAllCustomersOnce(): List<Customer> = dao.getAllCustomersOnce()
@@ -118,6 +130,7 @@ class AppRepository(private val dao: AppDao) {
         dao.deleteAllInventoryBatches()
         dao.deleteAllExpenses()
         dao.deleteAllDailyTasks()
+        syncManager?.syncClearAll()
     }
 
     suspend fun restoreAllData(
@@ -135,6 +148,15 @@ class AppRepository(private val dao: AppDao) {
         if (batchesList.isNotEmpty()) dao.insertInventoryBatches(batchesList)
         if (expensesList.isNotEmpty()) dao.insertExpenses(expensesList)
         if (tasksList.isNotEmpty()) dao.insertDailyTasks(tasksList)
+
+        syncManager?.syncRestoreAll(
+            customersList = customersList,
+            ordersList = ordersList,
+            paymentsList = paymentsList,
+            batchesList = batchesList,
+            expensesList = expensesList,
+            tasksList = tasksList
+        )
     }
 
     fun parsePaymentHistory(json: String): List<PaymentInfo> {

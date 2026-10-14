@@ -1,7 +1,9 @@
 package com.example
 
 import com.example.data.*
+import com.example.data.remote.*
 import com.example.ui.BackupPayload
+import com.example.ui.formatMoney
 import com.example.ui.generateOrderReceipt
 import com.example.ui.generatePaymentReceipt
 import com.google.gson.Gson
@@ -16,7 +18,7 @@ class ExampleUnitTest {
     fun testGenerateOrderReceipt_containsAllRequiredFieldsAndNoNetProfit() {
         val order = Order(
             id = "O1-test",
-            date = "2026-06-08",
+            orderDate = "2026-06-08",
             customerId = "C1",
             customerName = "Ayesha Khan",
             jarsQuantity = 5,
@@ -46,9 +48,9 @@ class ExampleUnitTest {
         assertTrue(receipt.contains("Customer  : Ayesha Khan"))
         assertTrue(receipt.contains("Phone     : 0300-1234567"))
         assertTrue(receipt.contains("Jars Qty  : 5"))
-        assertTrue(receipt.contains("Total Bill: Rs. 7500.0"))
-        assertTrue(receipt.contains("Paid Now  : Rs. 3000.0"))
-        assertTrue(receipt.contains("Balance   : Rs. 4500.0"))
+        assertTrue(receipt.contains("Total Bill: ${formatMoney(order.totalAmount)}"))
+        assertTrue(receipt.contains("Paid Now  : ${formatMoney(order.paidAmount)}"))
+        assertTrue(receipt.contains("Balance   : ${formatMoney(order.pendingAmount)}"))
         assertTrue(receipt.contains("Due Date  : 2026-06-20"))
         assertTrue(receipt.contains("Shukriya! Husn e Zar 🌿"))
 
@@ -62,7 +64,7 @@ class ExampleUnitTest {
     fun testGeneratePaymentReceipt_formatsHistoryCorrectly() {
         val order = Order(
             id = "O2-test",
-            date = "2026-06-01",
+            orderDate = "2026-06-01",
             customerId = "C2",
             customerName = "Fatima Ali",
             jarsQuantity = 2,
@@ -86,11 +88,11 @@ class ExampleUnitTest {
         assertTrue(paymentReceipt.contains("Payment Receipt"))
         assertTrue(paymentReceipt.contains("Order ID  : O2-test"))
         assertTrue(paymentReceipt.contains("Customer  : Fatima Ali"))
-        assertTrue(paymentReceipt.contains("Total Bill: Rs. 3000.0"))
-        assertTrue(paymentReceipt.contains("1. 2026-06-01 — Rs. 1000.0"))
-        assertTrue(paymentReceipt.contains("2. 2026-06-08 — Rs. 1500.0 (Aaj)"))
-        assertTrue(paymentReceipt.contains("Total Paid: Rs. 2500.0"))
-        assertTrue(paymentReceipt.contains("Remaining : Rs. 500.0"))
+        assertTrue(paymentReceipt.contains("Total Bill: ${formatMoney(order.totalAmount)}"))
+        assertTrue(paymentReceipt.contains("1. 2026-06-01 — ${formatMoney(1000.0)}"))
+        assertTrue(paymentReceipt.contains("2. 2026-06-08 — ${formatMoney(1500.0)} (Aaj)"))
+        assertTrue(paymentReceipt.contains("Total Paid: ${formatMoney(order.paidAmount)}"))
+        assertTrue(paymentReceipt.contains("Remaining : ${formatMoney(order.pendingAmount)}"))
         assertTrue(paymentReceipt.contains("Shukriya! Husn e Zar 🌿"))
     }
 
@@ -137,5 +139,25 @@ class ExampleUnitTest {
         assertEquals("Ayesha", restoredBackup.customers[0].name)
         assertEquals(1, restoredBackup.orders.size)
         assertEquals(4500.0, restoredBackup.orders[0].totalAmount, 0.001)
+    }
+
+    @Test
+    fun testSupabaseDtoMappings() {
+        val customer = Customer(
+            id = "c1",
+            name = "Zainab",
+            phone = "0321-1234567",
+            address = "Islamabad",
+            joiningDate = "2026-01-10",
+            pendingBalance = 1500.0
+        )
+        val dto = customer.toDto()
+        assertEquals("c1", dto.id)
+        assertEquals("Zainab", dto.name)
+        assertEquals("2026-01-10", dto.joiningDate)
+        assertEquals(1500.0, dto.pendingBalance, 0.001)
+
+        val backToEntity = dto.toEntity()
+        assertEquals(customer, backToEntity)
     }
 }

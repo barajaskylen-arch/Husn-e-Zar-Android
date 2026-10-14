@@ -46,11 +46,21 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             MyApplicationTheme {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = NavyDark
-                ) {
-                    var showCustomerModal by remember { mutableStateOf(false) }
+                val isLoggedIn by appViewModel.isLoggedIn.collectAsState()
+
+                if (!isLoggedIn) {
+                    LoginScreen(
+                        supabaseAuth = appViewModel.supabaseAuth,
+                        onLoginSuccess = {
+                            appViewModel.syncNow()
+                        }
+                    )
+                } else {
+                    Surface(
+                        modifier = Modifier.fillMaxSize(),
+                        color = NavyDark
+                    ) {
+                        var showCustomerModal by remember { mutableStateOf(false) }
                     var showBalanceModal by remember { mutableStateOf(false) }
                     var showExpenseModal by remember { mutableStateOf(false) }
 
@@ -207,6 +217,7 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+}
 }
 
 @Composable

@@ -15,8 +15,25 @@ import java.util.UUID
 
 class AppViewModel(application: Application) : AndroidViewModel(application) {
     private val database = AppDatabase.getDatabase(application)
-    private val repository = AppRepository(database.appDao())
+    val supabaseAuth = com.example.data.remote.SupabaseAuth(application)
+    val syncManager = com.example.data.remote.SyncManager(application, database.appDao(), supabaseAuth)
+    private val repository = AppRepository(database.appDao(), syncManager)
     private val prefs = application.getSharedPreferences("husn_e_zar_prefs", Context.MODE_PRIVATE)
+
+    val isLoggedIn: StateFlow<Boolean> = supabaseAuth.isLoggedInFlow
+    val isSyncing: StateFlow<Boolean> = syncManager.isSyncing
+    val lastSyncedTime: StateFlow<Long> = syncManager.lastSyncedTime
+
+    fun syncNow(onResult: ((Result<String>) -> Unit)? = null) {
+        viewModelScope.launch {
+            val result = syncManager.syncAll()
+            onResult?.invoke(result)
+        }
+    }
+
+    fun logout() {
+        supabaseAuth.logout()
+    }
 
     val customers = repository.customers.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     val orders = repository.orders.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
@@ -68,6 +85,15 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             dailyTasks.collect { tasks ->
                 updateStreakStatus(tasks)
+            }
+        }
+
+        // Automatic pull on startup and after login
+        viewModelScope.launch {
+            supabaseAuth.isLoggedInFlow.collect { loggedIn ->
+                if (loggedIn) {
+                    syncManager.syncAll()
+                }
             }
         }
     }
