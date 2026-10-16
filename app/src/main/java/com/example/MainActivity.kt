@@ -7,15 +7,17 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.People
-import androidx.compose.material.icons.filled.ShoppingCart
-import androidx.compose.material.icons.filled.Build
-import androidx.compose.material.icons.filled.AccountBalanceWallet
-import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.*
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.Alignment
+import androidx.compose.material.icons.filled.MoreHoriz
+
+// ... rest of class remains unchanged ...
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -75,6 +77,7 @@ class MainActivity : ComponentActivity() {
                         var showCustomerModal by remember { mutableStateOf(false) }
                     var showBalanceModal by remember { mutableStateOf(false) }
                     var showExpenseModal by remember { mutableStateOf(false) }
+                    var showOrderModal by remember { mutableStateOf(false) }
 
                     val customers by appViewModel.customers.collectAsState()
                     val customersViewModel: CustomersViewModel by viewModels {
@@ -99,7 +102,14 @@ class MainActivity : ComponentActivity() {
                         }
                     }
 
-                    NavHost(navController = navController, startDestination = "dashboard") {
+                    NavHost(
+                        navController = navController,
+                        startDestination = "dashboard",
+                        enterTransition = { androidx.compose.animation.fadeIn(animationSpec = androidx.compose.animation.core.tween(250)) },
+                        exitTransition = { androidx.compose.animation.fadeOut(animationSpec = androidx.compose.animation.core.tween(250)) },
+                        popEnterTransition = { androidx.compose.animation.fadeIn(animationSpec = androidx.compose.animation.core.tween(250)) },
+                        popExitTransition = { androidx.compose.animation.fadeOut(animationSpec = androidx.compose.animation.core.tween(250)) }
+                    ) {
                         composable("dashboard") {
                             Column(Modifier.fillMaxSize().background(Color.White)) {
                                 Box(modifier = Modifier.weight(1f)) {
@@ -109,7 +119,8 @@ class MainActivity : ComponentActivity() {
                                         onNavigateToPricing = { navController.navigate("pricing") },
                                         onAddCustomer = { showCustomerModal = true },
                                         onAddBalance = { showBalanceModal = true },
-                                        onAddExpense = { showExpenseModal = true }
+                                        onAddExpense = { showExpenseModal = true },
+                                        onNewOrder = { showOrderModal = true }
                                     )
                                 }
                                 AppBottomNavigation(currentRoute = currentRoute, navController = navController)
@@ -225,6 +236,35 @@ class MainActivity : ComponentActivity() {
                             }
                         )
                     }
+
+                    if (showOrderModal) {
+                        val currentStock by appViewModel.currentAvailableStock.collectAsState()
+                        val currentBaseUnitCost by appViewModel.currentBaseUnitCost.collectAsState()
+                        AddOrderModal(
+                            customers = customers,
+                            currentStock = currentStock,
+                            currentBaseCost = currentBaseUnitCost,
+                            onDismiss = { showOrderModal = false },
+                            onSave = { custId, custName, orderDate, jars, totalAmt, paidAmt, dueDate, desc ->
+                                if (jars > currentStock) {
+                                    android.widget.Toast.makeText(this@MainActivity, "Stock kam hai! Sirf $currentStock jars available hain.", android.widget.Toast.LENGTH_LONG).show()
+                                } else {
+                                    appViewModel.addOrder(
+                                        date = orderDate,
+                                        customerId = custId,
+                                        customerName = custName,
+                                        jarsQuantity = jars,
+                                        totalAmount = totalAmt,
+                                        paidAmount = paidAmt,
+                                        dueDate = dueDate,
+                                        description = desc,
+                                        baseCostPerJar = currentBaseUnitCost
+                                    )
+                                    showOrderModal = false
+                                }
+                            }
+                        )
+                    }
                 }
             }
         }
@@ -234,6 +274,9 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun AppBottomNavigation(currentRoute: String, navController: NavController) {
+    var showMoreMenu by remember { mutableStateOf(false) }
+    val isMoreSelected = currentRoute in listOf("expenses", "schedule", "settings")
+
     val unselectedColor = Color(0xFF8A99AD)
     val itemColors = NavigationBarItemDefaults.colors(
         selectedIconColor = DarkBlue,
@@ -251,10 +294,19 @@ fun AppBottomNavigation(currentRoute: String, navController: NavController) {
         NavigationBar(
             containerColor = Color.White
         ) {
+            // 1. Dashboard
+            val dashSelected = currentRoute == "dashboard"
+            val dashScale by animateFloatAsState(if (dashSelected) 1.12f else 1f, animationSpec = tween(200), label = "dashScale")
             NavigationBarItem(
-                icon = { Icon(Icons.Default.Home, contentDescription = "Dashboard") },
-                label = { Text("Dashboard", fontSize = 10.sp, maxLines = 1, softWrap = false, fontWeight = FontWeight.Bold) },
-                selected = currentRoute == "dashboard",
+                icon = {
+                    Icon(
+                        Icons.Default.Home,
+                        contentDescription = "Dashboard",
+                        modifier = Modifier.graphicsLayer { scaleX = dashScale; scaleY = dashScale }
+                    )
+                },
+                label = { Text("Dashboard", fontSize = 11.sp, maxLines = 1, softWrap = false, fontWeight = FontWeight.Bold) },
+                selected = dashSelected,
                 onClick = {
                     navController.navigate("dashboard") {
                         popUpTo(navController.graph.startDestinationId) { saveState = true }
@@ -264,10 +316,20 @@ fun AppBottomNavigation(currentRoute: String, navController: NavController) {
                 },
                 colors = itemColors
             )
+
+            // 2. Orders
+            val ordersSelected = currentRoute == "orders"
+            val ordersScale by animateFloatAsState(if (ordersSelected) 1.12f else 1f, animationSpec = tween(200), label = "ordersScale")
             NavigationBarItem(
-                icon = { Icon(Icons.Default.ShoppingCart, contentDescription = "Orders") },
-                label = { Text("Orders", fontSize = 10.sp, maxLines = 1, softWrap = false, fontWeight = FontWeight.Bold) },
-                selected = currentRoute == "orders",
+                icon = {
+                    Icon(
+                        Icons.Default.ShoppingCart,
+                        contentDescription = "Orders",
+                        modifier = Modifier.graphicsLayer { scaleX = ordersScale; scaleY = ordersScale }
+                    )
+                },
+                label = { Text("Orders", fontSize = 11.sp, maxLines = 1, softWrap = false, fontWeight = FontWeight.Bold) },
+                selected = ordersSelected,
                 onClick = {
                     navController.navigate("orders") {
                         popUpTo(navController.graph.startDestinationId) { saveState = true }
@@ -277,23 +339,20 @@ fun AppBottomNavigation(currentRoute: String, navController: NavController) {
                 },
                 colors = itemColors
             )
+
+            // 3. Customers
+            val custSelected = currentRoute == "customers"
+            val custScale by animateFloatAsState(if (custSelected) 1.12f else 1f, animationSpec = tween(200), label = "custScale")
             NavigationBarItem(
-                icon = { Icon(Icons.Default.Build, contentDescription = "Inventory") },
-                label = { Text("Inventory", fontSize = 10.sp, maxLines = 1, softWrap = false, fontWeight = FontWeight.Bold) },
-                selected = currentRoute == "inventory",
-                onClick = {
-                    navController.navigate("inventory") {
-                        popUpTo(navController.graph.startDestinationId) { saveState = true }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
+                icon = {
+                    Icon(
+                        Icons.Default.People,
+                        contentDescription = "Customers",
+                        modifier = Modifier.graphicsLayer { scaleX = custScale; scaleY = custScale }
+                    )
                 },
-                colors = itemColors
-            )
-            NavigationBarItem(
-                icon = { Icon(Icons.Default.People, contentDescription = "Customers") },
-                label = { Text("Customers", fontSize = 10.sp, maxLines = 1, softWrap = false, fontWeight = FontWeight.Bold) },
-                selected = currentRoute == "customers",
+                label = { Text("Customers", fontSize = 11.sp, maxLines = 1, softWrap = false, fontWeight = FontWeight.Bold) },
+                selected = custSelected,
                 onClick = {
                     navController.navigate("customers") {
                         popUpTo(navController.graph.startDestinationId) { saveState = true }
@@ -303,12 +362,22 @@ fun AppBottomNavigation(currentRoute: String, navController: NavController) {
                 },
                 colors = itemColors
             )
+
+            // 4. Inventory
+            val invSelected = currentRoute == "inventory"
+            val invScale by animateFloatAsState(if (invSelected) 1.12f else 1f, animationSpec = tween(200), label = "invScale")
             NavigationBarItem(
-                icon = { Icon(Icons.Default.AccountBalanceWallet, contentDescription = "Expenses") },
-                label = { Text("Expenses", fontSize = 10.sp, maxLines = 1, softWrap = false, fontWeight = FontWeight.Bold) },
-                selected = currentRoute == "expenses",
+                icon = {
+                    Icon(
+                        Icons.Default.Build,
+                        contentDescription = "Inventory",
+                        modifier = Modifier.graphicsLayer { scaleX = invScale; scaleY = invScale }
+                    )
+                },
+                label = { Text("Inventory", fontSize = 11.sp, maxLines = 1, softWrap = false, fontWeight = FontWeight.Bold) },
+                selected = invSelected,
                 onClick = {
-                    navController.navigate("expenses") {
+                    navController.navigate("inventory") {
                         popUpTo(navController.graph.startDestinationId) { saveState = true }
                         launchSingleTop = true
                         restoreState = true
@@ -316,30 +385,90 @@ fun AppBottomNavigation(currentRoute: String, navController: NavController) {
                 },
                 colors = itemColors
             )
+
+            // 5. More (Popup for Expenses, Schedule, Settings)
+            val moreScale by animateFloatAsState(if (isMoreSelected) 1.12f else 1f, animationSpec = tween(200), label = "moreScale")
             NavigationBarItem(
-                icon = { Icon(Icons.Default.DateRange, contentDescription = "Schedule") },
-                label = { Text("Schedule", fontSize = 10.sp, maxLines = 1, softWrap = false, fontWeight = FontWeight.Bold) },
-                selected = currentRoute == "schedule",
-                onClick = {
-                    navController.navigate("schedule") {
-                        popUpTo(navController.graph.startDestinationId) { saveState = true }
-                        launchSingleTop = true
-                        restoreState = true
+                icon = {
+                    Box {
+                        Icon(
+                            Icons.Default.MoreHoriz,
+                            contentDescription = "More",
+                            modifier = Modifier.graphicsLayer { scaleX = moreScale; scaleY = moreScale }
+                        )
+                        DropdownMenu(
+                            expanded = showMoreMenu,
+                            onDismissRequest = { showMoreMenu = false },
+                            modifier = Modifier
+                                .background(Color.White, RoundedCornerShape(16.dp))
+                                .padding(vertical = 4.dp)
+                        ) {
+                            DropdownMenuItem(
+                                text = {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(Icons.Default.AccountBalanceWallet, contentDescription = null, tint = DarkBlue, modifier = Modifier.size(20.dp))
+                                        Spacer(Modifier.width(12.dp))
+                                        Text("Expenses", color = DarkBlue, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                    }
+                                },
+                                onClick = {
+                                    showMoreMenu = false
+                                    navController.navigate("expenses") {
+                                        popUpTo(navController.graph.startDestinationId) { saveState = true }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
+                                },
+                                modifier = Modifier.heightIn(min = 48.dp)
+                            )
+
+                            HorizontalDivider(color = Color(0xFFECEFF1), thickness = 1.dp)
+
+                            DropdownMenuItem(
+                                text = {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(Icons.Default.DateRange, contentDescription = null, tint = DarkBlue, modifier = Modifier.size(20.dp))
+                                        Spacer(Modifier.width(12.dp))
+                                        Text("Schedule", color = DarkBlue, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                    }
+                                },
+                                onClick = {
+                                    showMoreMenu = false
+                                    navController.navigate("schedule") {
+                                        popUpTo(navController.graph.startDestinationId) { saveState = true }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
+                                },
+                                modifier = Modifier.heightIn(min = 48.dp)
+                            )
+
+                            HorizontalDivider(color = Color(0xFFECEFF1), thickness = 1.dp)
+
+                            DropdownMenuItem(
+                                text = {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(Icons.Default.Settings, contentDescription = null, tint = DarkBlue, modifier = Modifier.size(20.dp))
+                                        Spacer(Modifier.width(12.dp))
+                                        Text("Settings", color = DarkBlue, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                    }
+                                },
+                                onClick = {
+                                    showMoreMenu = false
+                                    navController.navigate("settings") {
+                                        popUpTo(navController.graph.startDestinationId) { saveState = true }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
+                                },
+                                modifier = Modifier.heightIn(min = 48.dp)
+                            )
+                        }
                     }
                 },
-                colors = itemColors
-            )
-            NavigationBarItem(
-                icon = { Icon(Icons.Default.Settings, contentDescription = "Settings") },
-                label = { Text("Settings", fontSize = 10.sp, maxLines = 1, softWrap = false, fontWeight = FontWeight.Bold) },
-                selected = currentRoute == "settings",
-                onClick = {
-                    navController.navigate("settings") {
-                        popUpTo(navController.graph.startDestinationId) { saveState = true }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                },
+                label = { Text("More", fontSize = 11.sp, maxLines = 1, softWrap = false, fontWeight = FontWeight.Bold) },
+                selected = isMoreSelected,
+                onClick = { showMoreMenu = true },
                 colors = itemColors
             )
         }

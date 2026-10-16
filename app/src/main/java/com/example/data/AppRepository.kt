@@ -1,5 +1,6 @@
 package com.example.data
 
+import androidx.room.withTransaction
 import com.example.data.remote.SyncManager
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
@@ -9,7 +10,8 @@ import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 
 class AppRepository(
     private val dao: AppDao,
-    private val syncManager: SyncManager? = null
+    private val syncManager: SyncManager? = null,
+    private val database: AppDatabase? = null
 ) {
     val customers: Flow<List<Customer>> = dao.getAllCustomers()
     val orders: Flow<List<Order>> = dao.getAllOrders()
@@ -34,9 +36,37 @@ class AppRepository(
         syncManager?.syncUpsertCustomer(customer)
     }
 
+    private suspend fun <T> runInTransaction(block: suspend () -> T): T {
+        return if (database != null) {
+            database.withTransaction { block() }
+        } else {
+            block()
+        }
+    }
+
     suspend fun deleteCustomer(id: String) {
         dao.deleteCustomerById(id)
         syncManager?.syncDeleteCustomer(id)
+    }
+
+    suspend fun deleteCustomerCascade(customerId: String) = runInTransaction {
+        // Delete all orders of this customer
+        val customerOrders = dao.getAllOrdersOnce().filter { it.customerId == customerId }
+        for (order in customerOrders) {
+            dao.deleteOrderById(order.id)
+            syncManager?.syncDeleteOrder(order.id)
+        }
+
+        // Delete all payments of this customer
+        val customerPayments = dao.getAllPaymentsOnce().filter { it.customerId == customerId }
+        for (payment in customerPayments) {
+            dao.deleteCustomerPaymentById(payment.id)
+            syncManager?.syncDeleteCustomerPayment(payment.id)
+        }
+
+        // Finally delete the customer
+        dao.deleteCustomerById(customerId)
+        syncManager?.syncDeleteCustomer(customerId)
     }
 
     suspend fun updateOrder(oldOrder: Order, newOrder: Order) {
@@ -51,6 +81,154 @@ class AppRepository(
                 val updated = customer.copy(pendingBalance = customer.pendingBalance + diff)
                 dao.updateCustomer(updated)
                 syncManager?.syncUpsertCustomer(updated)
+            }
+        }
+    }
+
+    suspend fun deleteOrder(order: Order) = runInTransaction {
+        // 1. For each entry in order.paymentHistory, find matching CustomerPayment (same customerId + same date + same amount)
+        val history = parsePaymentHistory(order.paymentHistory)
+        if (history.isNotEmpty()) {
+            val allPayments = dao.getAllPaymentsOnce().filter { it.customerId == order.customerId }.toMutableList()
+            for (item in history) {
+                val matchIndex = allPayments.indexOfFirst {
+                    it.date == item.date && kotlin.math.abs(it.amount - item.amount) < 0.001
+                }
+                if (matchIndex != -1) {
+                    val matchedPayment = allPayments.removeAt(matchIndex)
+                    dao.deleteCustomerPaymentById(matchedPayment.id)
+                    syncManager?.syncDeleteCustomerPayment(matchedPayment.id)
+                }
+            }
+        }
+
+        // 2. Delete the order
+        dao.deleteOrderById(order.id)
+        syncManager?.syncDeleteOrder(order.id)
+
+        // 3. Customer's pendingBalance = max(0, pendingBalance - order.pendingAmount)
+        val customer = dao.getCustomerById(order.customerId)
+        if (customer != null) {
+            val newBalance = maxOf(0.0, customer.pendingBalance - order.pendingAmount)
+            val updated = customer.copy(pendingBalance = newBalance)
+            dao.updateCustomer(updated)
+            syncManager?.syncUpsertCustomer(updated)
+        }
+    }
+
+    suspend fun updateExpense(expense: Expense) {
+        dao.updateExpense(expense)
+        syncManager?.syncUpsertExpense(expense)
+    }
+
+    suspend fun deleteExpense(id: String) {
+        dao.deleteExpenseById(id)
+        syncManager?.syncDeleteExpense(id)
+    }
+
+    suspend fun updateInventoryBatch(batch: InventoryBatch) {
+        val totalCost = batch.rawMaterialCost + (batch.emptyJarsCount * batch.jarUnitCost)
+        val unitCost = if (batch.jarsProduced > 0) totalCost / batch.jarsProduced else 0.0
+        val computedBatch = batch.copy(
+            totalCalculatedCost = totalCost,
+            baseCostPerJar = unitCost
+        )
+        dao.updateInventoryBatch(computedBatch)
+        syncManager?.syncUpsertBatch(computedBatch)
+    }
+
+    suspend fun deleteInventoryBatch(id: String) {
+        dao.deleteInventoryBatchById(id)
+        syncManager?.syncDeleteBatch(id)
+    }
+
+    suspend fun updateCustomerPayment(oldPayment: CustomerPayment, newPayment: CustomerPayment) = runInTransaction {
+        dao.updateCustomerPayment(newPayment)
+        syncManager?.syncUpsertCustomerPayment(newPayment)
+
+        val orders = dao.getAllOrdersOnce().filter { it.customerId == oldPayment.customerId }
+        var matchedOrder: Order? = null
+        var matchedHistoryIndex = -1
+        var matchedHistoryList: MutableList<PaymentInfo>? = null
+
+        for (ord in orders) {
+            val history = parsePaymentHistory(ord.paymentHistory).toMutableList()
+            val idx = history.indexOfFirst {
+                it.date == oldPayment.date && kotlin.math.abs(it.amount - oldPayment.amount) < 0.001
+            }
+            if (idx != -1) {
+                matchedOrder = ord
+                matchedHistoryIndex = idx
+                matchedHistoryList = history
+                break
+            }
+        }
+
+        if (matchedOrder != null && matchedHistoryList != null && matchedHistoryIndex != -1) {
+            matchedHistoryList[matchedHistoryIndex] = PaymentInfo(
+                date = newPayment.date,
+                amount = newPayment.amount,
+                description = newPayment.description
+            )
+            val paidDiff = newPayment.amount - oldPayment.amount
+            val newPaid = maxOf(0.0, matchedOrder.paidAmount + paidDiff)
+            val newPending = maxOf(0.0, matchedOrder.totalAmount - newPaid)
+            val updatedOrder = matchedOrder.copy(
+                paidAmount = newPaid,
+                pendingAmount = newPending,
+                paymentHistory = paymentAdapter.toJson(matchedHistoryList)
+            )
+            updateOrder(matchedOrder, updatedOrder)
+        } else {
+            val customer = dao.getCustomerById(newPayment.customerId)
+            if (customer != null) {
+                val newBal = maxOf(0.0, customer.pendingBalance + oldPayment.amount - newPayment.amount)
+                val updatedCust = customer.copy(pendingBalance = newBal)
+                dao.updateCustomer(updatedCust)
+                syncManager?.syncUpsertCustomer(updatedCust)
+            }
+        }
+    }
+
+    suspend fun deleteCustomerPayment(payment: CustomerPayment) = runInTransaction {
+        dao.deleteCustomerPaymentById(payment.id)
+        syncManager?.syncDeleteCustomerPayment(payment.id)
+
+        val orders = dao.getAllOrdersOnce().filter { it.customerId == payment.customerId }
+        var matchedOrder: Order? = null
+        var matchedHistoryIndex = -1
+        var matchedHistoryList: MutableList<PaymentInfo>? = null
+
+        for (ord in orders) {
+            val history = parsePaymentHistory(ord.paymentHistory).toMutableList()
+            val idx = history.indexOfFirst {
+                it.date == payment.date && kotlin.math.abs(it.amount - payment.amount) < 0.001
+            }
+            if (idx != -1) {
+                matchedOrder = ord
+                matchedHistoryIndex = idx
+                matchedHistoryList = history
+                break
+            }
+        }
+
+        if (matchedOrder != null && matchedHistoryList != null && matchedHistoryIndex != -1) {
+            matchedHistoryList.removeAt(matchedHistoryIndex)
+            val newPaid = maxOf(0.0, matchedOrder.paidAmount - payment.amount)
+            val newPending = maxOf(0.0, matchedOrder.totalAmount - newPaid)
+            val updatedOrder = matchedOrder.copy(
+                paidAmount = newPaid,
+                pendingAmount = newPending,
+                paymentHistory = paymentAdapter.toJson(matchedHistoryList)
+            )
+            updateOrder(matchedOrder, updatedOrder)
+        } else {
+            val customer = dao.getCustomerById(payment.customerId)
+            if (customer != null) {
+                val newBal = customer.pendingBalance + payment.amount
+                val updatedCust = customer.copy(pendingBalance = newBal)
+                dao.updateCustomer(updatedCust)
+                syncManager?.syncUpsertCustomer(updatedCust)
             }
         }
     }

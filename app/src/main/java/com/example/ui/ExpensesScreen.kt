@@ -8,9 +8,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ReceiptLong
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -98,14 +100,17 @@ fun ExpensesScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Expenses Registry", fontWeight = FontWeight.Bold, color = Yellow) },
+                title = { Text("Expenses Registry (${filteredExpenses.size})", fontWeight = FontWeight.Bold, color = Yellow) },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = DarkBlue,
                     titleContentColor = Yellow,
                     actionIconContentColor = Yellow
                 ),
                 actions = {
-                    IconButton(onClick = onAddExpense) {
+                    IconButton(
+                        onClick = onAddExpense,
+                        modifier = Modifier.size(48.dp)
+                    ) {
                         Icon(Icons.Default.Add, contentDescription = "Add Expense", tint = Yellow)
                     }
                 }
@@ -306,86 +311,162 @@ fun ExpensesScreen(
                         modifier = Modifier.fillMaxWidth(),
                         colors = CardDefaults.cardColors(containerColor = DarkBlue),
                         border = BorderStroke(1.dp, CardBorder),
-                        shape = RoundedCornerShape(20.dp),
+                        shape = RoundedCornerShape(24.dp),
                         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
                     ) {
                         Column(
                             modifier = Modifier
                                 .padding(32.dp)
                                 .fillMaxWidth(),
-                            horizontalAlignment = Alignment.CenterHorizontally
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
                         ) {
-                            Icon(
-                                Icons.Default.ReceiptLong,
-                                contentDescription = null,
-                                tint = Yellow,
-                                modifier = Modifier.size(40.dp)
+                            Box(
+                                modifier = Modifier
+                                    .size(72.dp)
+                                    .clip(CircleShape)
+                                    .background(DarkBlueDeep),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.ReceiptLong,
+                                    contentDescription = null,
+                                    tint = Yellow,
+                                    modifier = Modifier.size(40.dp)
+                                )
+                            }
+                            Spacer(Modifier.height(14.dp))
+                            Text(
+                                text = "Koi Kharcha Nahi Hai",
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 17.sp,
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
                             )
-                            Spacer(Modifier.height(8.dp))
-                            Text("No expenses found for this selection.", color = Color.White.copy(alpha = 0.8f), fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                            Spacer(Modifier.height(6.dp))
+                            Text(
+                                text = "Pehla kharcha darj karein taake expenses record shuru hon.",
+                                color = Color.White.copy(alpha = 0.75f),
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 12.sp,
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                            )
+                            Spacer(Modifier.height(18.dp))
+                            Button(
+                                onClick = onAddExpense,
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Yellow,
+                                    contentColor = DarkBlue
+                                ),
+                                shape = RoundedCornerShape(14.dp),
+                                modifier = Modifier.height(48.dp)
+                            ) {
+                                Icon(Icons.Default.Add, contentDescription = null, tint = DarkBlue, modifier = Modifier.size(18.dp))
+                                Spacer(Modifier.width(8.dp))
+                                Text("Pehla Kharcha Darj Karein", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = DarkBlue)
+                            }
                         }
                     }
                 }
             } else {
-                items(filteredExpenses) { expense ->
-                    val categoryColor = when (expense.category.lowercase()) {
-                        "raw material" -> SuccessGreen
-                        "marketing" -> Yellow
-                        "logistics" -> Color(0xFF64B5F6)
-                        else -> Color.White
-                    }
-                    val categoryBg = when (expense.category.lowercase()) {
-                        "raw material" -> AlertGreenBg
-                        "marketing" -> AlertYellowBg
-                        "logistics" -> AlertBlueBg
-                        else -> DarkBlueDeep
-                    }
+                items(filteredExpenses, key = { it.id }) { expense ->
+                    Box(modifier = Modifier.animateItem()) {
+                        val categoryColor = when (expense.category.lowercase()) {
+                            "raw material" -> SuccessGreen
+                            "marketing" -> Yellow
+                            "logistics" -> Color(0xFF64B5F6)
+                            else -> Color.White
+                        }
+                        val categoryBg = when (expense.category.lowercase()) {
+                            "raw material" -> AlertGreenBg
+                            "marketing" -> DarkBlueDeep
+                            "logistics" -> Color(0xFF0D253F)
+                            else -> DarkBlueDeep
+                        }
+                        val categoryIcon: ImageVector = when (expense.category.lowercase()) {
+                            "raw material" -> Icons.Default.Inventory2
+                            "marketing" -> Icons.Default.Campaign
+                            "logistics" -> Icons.Default.LocalShipping
+                            else -> Icons.Default.Category
+                        }
 
-                    Card(
-                        border = BorderStroke(1.dp, CardBorder),
-                        colors = CardDefaults.cardColors(containerColor = DarkBlue),
-                        shape = RoundedCornerShape(20.dp),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .padding(16.dp)
-                                .fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                        Card(
+                            border = BorderStroke(1.dp, CardBorder),
+                            colors = CardDefaults.cardColors(containerColor = DarkBlue),
+                            shape = RoundedCornerShape(20.dp),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
+                            modifier = Modifier.fillMaxWidth()
                         ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(expense.title, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium, color = Color.White)
-                                Spacer(Modifier.height(4.dp))
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Surface(
-                                        color = categoryBg,
-                                        shape = RoundedCornerShape(6.dp),
-                                        border = BorderStroke(1.dp, categoryColor.copy(alpha = 0.6f))
-                                    ) {
+                            Row(
+                                modifier = Modifier
+                                    .padding(16.dp)
+                                    .fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = expense.title,
+                                        fontWeight = FontWeight.Bold,
+                                        style = MaterialTheme.typography.titleMedium,
+                                        color = Color.White
+                                    )
+                                    Spacer(Modifier.height(6.dp))
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        // Category color and icon chip
+                                        Surface(
+                                            color = categoryBg,
+                                            shape = RoundedCornerShape(8.dp),
+                                            border = BorderStroke(1.dp, categoryColor.copy(alpha = 0.7f))
+                                        ) {
+                                            Row(
+                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Icon(
+                                                    imageVector = categoryIcon,
+                                                    contentDescription = null,
+                                                    tint = categoryColor,
+                                                    modifier = Modifier.size(13.dp)
+                                                )
+                                                Spacer(Modifier.width(5.dp))
+                                                Text(
+                                                    text = expense.category,
+                                                    color = categoryColor,
+                                                    fontSize = 11.sp,
+                                                    fontWeight = FontWeight.Bold
+                                                )
+                                            }
+                                        }
+                                        Spacer(Modifier.width(8.dp))
                                         Text(
-                                            text = expense.category,
-                                            color = categoryColor,
-                                            fontSize = 11.sp,
+                                            text = expense.date,
+                                            style = MaterialTheme.typography.bodySmall,
                                             fontWeight = FontWeight.Bold,
-                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                                            color = Color.White.copy(alpha = 0.7f)
                                         )
                                     }
-                                    Spacer(Modifier.width(8.dp))
-                                    Text(expense.date, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = Color.White.copy(alpha = 0.7f))
+                                    if (expense.description.isNotBlank()) {
+                                        Spacer(Modifier.height(4.dp))
+                                        Text(
+                                            text = expense.description,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color.White.copy(alpha = 0.75f)
+                                        )
+                                    }
                                 }
-                                if (expense.description.isNotBlank()) {
-                                    Spacer(Modifier.height(4.dp))
-                                    Text(expense.description, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = Color.White.copy(alpha = 0.8f))
-                                }
+
+                                Spacer(Modifier.width(12.dp))
+
+                                // Amount right par bold red
+                                Text(
+                                    text = formatMoney(expense.amount),
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 17.sp,
+                                    color = AlertRed
+                                )
                             }
-                            Text(
-                                formatMoney(expense.amount),
-                                fontWeight = FontWeight.Bold,
-                                style = MaterialTheme.typography.titleMedium,
-                                color = AlertRed
-                            )
                         }
                     }
                 }

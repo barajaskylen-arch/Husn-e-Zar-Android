@@ -777,6 +777,16 @@ class SyncManager(
         )
     }
 
+    fun syncDeleteBatch(id: String) {
+        enqueueAction(
+            PendingAction(
+                table = "inventory_batches",
+                actionType = "DELETE",
+                entityId = id
+            )
+        )
+    }
+
     fun syncUpsertExpense(expense: Expense) {
         enqueueAction(
             PendingAction(
@@ -784,6 +794,16 @@ class SyncManager(
                 actionType = "UPSERT",
                 entityId = expense.id,
                 jsonPayload = expenseAdapter.toJson(expense.toDto())
+            )
+        )
+    }
+
+    fun syncDeleteExpense(id: String) {
+        enqueueAction(
+            PendingAction(
+                table = "expenses",
+                actionType = "DELETE",
+                entityId = id
             )
         )
     }
@@ -816,6 +836,16 @@ class SyncManager(
                 actionType = "UPSERT",
                 entityId = payment.id,
                 jsonPayload = paymentAdapter.toJson(payment.toDto())
+            )
+        )
+    }
+
+    fun syncDeleteCustomerPayment(id: String) {
+        enqueueAction(
+            PendingAction(
+                table = "customer_payments",
+                actionType = "DELETE",
+                entityId = id
             )
         )
     }

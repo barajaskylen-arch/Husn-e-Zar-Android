@@ -1,6 +1,7 @@
 package com.example.ui
 
 import android.content.Context
+import android.widget.Toast
 import androidx.compose.animation.*
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
@@ -21,8 +22,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import androidx.compose.ui.text.font.FontWeight
@@ -109,6 +112,61 @@ fun standardTextFieldColors() = OutlinedTextFieldDefaults.colors(
     focusedTrailingIconColor = DarkBlue,
     unfocusedTrailingIconColor = DarkBlue.copy(alpha = 0.7f)
 )
+
+@Composable
+fun TappableDateRow(
+    label: String,
+    dateValue: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = BorderStroke(1.dp, DarkBlue)
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(horizontal = 14.dp, vertical = 12.dp)
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Default.CalendarToday,
+                    contentDescription = null,
+                    tint = DarkBlue,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(Modifier.width(12.dp))
+                Column {
+                    Text(
+                        text = label,
+                        fontSize = 11.sp,
+                        color = DarkBlue.copy(alpha = 0.7f),
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = dateValue.ifBlank { "Tareekh chunein" },
+                        fontSize = 14.sp,
+                        color = DarkBlue,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+            Icon(
+                imageVector = Icons.Default.EditCalendar,
+                contentDescription = "Change Date",
+                tint = DarkBlue,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+    }
+}
 
 // Reusable Center Dialog with 300ms Fade-in + Scale (0.92 -> 1.0) and 50% Black Scrim
 @Composable
@@ -312,75 +370,110 @@ fun RegisterCustomerModal(
     onSave: (String, String, String, String) -> Unit
 ) {
     val context = LocalContext.current
+    val haptic = LocalHapticFeedback.current
     var name by remember { mutableStateOf("") }
     var phone by remember { mutableStateOf("") }
     var address by remember { mutableStateOf("") }
     var joiningDate by remember { mutableStateOf(getTodayDateString()) }
 
+    var touchedName by remember { mutableStateOf(false) }
+    var touchedPhone by remember { mutableStateOf(false) }
+    var touchedAddress by remember { mutableStateOf(false) }
+
+    val isValid = name.isNotBlank() && phone.isNotBlank() && address.isNotBlank()
+
     AnimatedCenterDialog(
         onDismiss = onDismiss,
         title = "Naya Customer",
         icon = Icons.Default.PersonAdd,
-        saveEnabled = name.isNotBlank() && phone.isNotBlank() && address.isNotBlank(),
+        saveEnabled = isValid,
         onSave = {
-            if (name.isNotBlank() && phone.isNotBlank() && address.isNotBlank()) {
+            if (isValid) {
+                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                Toast.makeText(context, "Customer save ho gaya! ✨", Toast.LENGTH_SHORT).show()
                 onSave(name.trim(), phone.trim(), address.trim(), joiningDate)
                 onDismiss()
             }
         }
     ) {
-        OutlinedTextField(
-            value = name,
-            onValueChange = { name = it },
-            label = { Text("Customer Name *", fontWeight = FontWeight.Bold) },
-            shape = RoundedCornerShape(14.dp),
-            modifier = Modifier.fillMaxWidth(),
-            colors = standardTextFieldColors()
-        )
-
-        OutlinedTextField(
-            value = phone,
-            onValueChange = { if (it.length <= 15) phone = it },
-            label = { Text("Phone Number * (e.g. 03001234567)", fontWeight = FontWeight.Bold) },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-            shape = RoundedCornerShape(14.dp),
-            modifier = Modifier.fillMaxWidth(),
-            colors = standardTextFieldColors()
-        )
-
-        OutlinedTextField(
-            value = address,
-            onValueChange = { address = it },
-            label = { Text("Address *", fontWeight = FontWeight.Bold) },
-            minLines = 2,
-            maxLines = 3,
-            shape = RoundedCornerShape(14.dp),
-            modifier = Modifier.fillMaxWidth(),
-            colors = standardTextFieldColors()
-        )
-
-        Box(modifier = Modifier.fillMaxWidth()) {
+        Column {
             OutlinedTextField(
-                value = joiningDate,
-                onValueChange = {},
-                readOnly = true,
-                label = { Text("Joining Date", fontWeight = FontWeight.Bold) },
-                trailingIcon = {
-                    IconButton(onClick = {
-                        showDatePickerDialog(context, joiningDate) { joiningDate = it }
-                    }) {
-                        Icon(Icons.Default.CalendarMonth, contentDescription = "Select Date", tint = DarkBlue)
-                    }
-                },
+                value = name,
+                onValueChange = { name = it; touchedName = true },
+                label = { Text("Customer Name *", fontWeight = FontWeight.Bold) },
+                leadingIcon = { Icon(Icons.Default.Person, contentDescription = null, tint = DarkBlue) },
+                isError = touchedName && name.isBlank(),
+                singleLine = true,
                 shape = RoundedCornerShape(14.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable {
-                        showDatePickerDialog(context, joiningDate) { joiningDate = it }
-                    },
+                modifier = Modifier.fillMaxWidth(),
                 colors = standardTextFieldColors()
             )
+            if (touchedName && name.isBlank()) {
+                Text(
+                    text = "Customer ka naam likhna zaroori hai",
+                    color = AlertRed,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(start = 8.dp, top = 2.dp)
+                )
+            }
         }
+
+        Column {
+            OutlinedTextField(
+                value = phone,
+                onValueChange = { if (it.length <= 15) { phone = it; touchedPhone = true } },
+                label = { Text("Phone Number *", fontWeight = FontWeight.Bold) },
+                leadingIcon = { Icon(Icons.Default.Phone, contentDescription = null, tint = DarkBlue) },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                isError = touchedPhone && phone.isBlank(),
+                singleLine = true,
+                shape = RoundedCornerShape(14.dp),
+                modifier = Modifier.fillMaxWidth(),
+                colors = standardTextFieldColors()
+            )
+            if (touchedPhone && phone.isBlank()) {
+                Text(
+                    text = "Sahih phone number likhna zaroori hai",
+                    color = AlertRed,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(start = 8.dp, top = 2.dp)
+                )
+            }
+        }
+
+        Column {
+            OutlinedTextField(
+                value = address,
+                onValueChange = { address = it; touchedAddress = true },
+                label = { Text("Address *", fontWeight = FontWeight.Bold) },
+                leadingIcon = { Icon(Icons.Default.LocationOn, contentDescription = null, tint = DarkBlue) },
+                isError = touchedAddress && address.isBlank(),
+                minLines = 2,
+                maxLines = 3,
+                shape = RoundedCornerShape(14.dp),
+                modifier = Modifier.fillMaxWidth(),
+                colors = standardTextFieldColors()
+            )
+            if (touchedAddress && address.isBlank()) {
+                Text(
+                    text = "Address likhna zaroori hai",
+                    color = AlertRed,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(start = 8.dp, top = 2.dp)
+                )
+            }
+        }
+
+        TappableDateRow(
+            label = "Joining Date",
+            dateValue = joiningDate,
+            onClick = {
+                showDatePickerDialog(context, joiningDate) { joiningDate = it }
+            }
+        )
     }
 }
 
@@ -393,22 +486,28 @@ fun AddBalanceModal(
     onSave: (String, Double, String, String) -> Unit
 ) {
     val context = LocalContext.current
+    val haptic = LocalHapticFeedback.current
     var selectedCustomer by remember { mutableStateOf<Customer?>(null) }
     var amount by remember { mutableStateOf("") }
     var date by remember { mutableStateOf(getTodayDateString()) }
     var description by remember { mutableStateOf("") }
     var expanded by remember { mutableStateOf(false) }
+    var touchedAmount by remember { mutableStateOf(false) }
+
+    val amtNum = amount.toDoubleOrNull() ?: 0.0
+    val isValid = selectedCustomer != null && amtNum > 0.0
 
     AnimatedCenterDialog(
         onDismiss = onDismiss,
-        title = "Payment Add Karo",
-        icon = Icons.Default.AttachMoney,
-        saveEnabled = selectedCustomer != null && (amount.toDoubleOrNull() ?: 0.0) > 0.0,
+        title = "Payment Record Karo",
+        icon = Icons.Default.Payments,
+        saveEnabled = isValid,
         onSave = {
-            val amt = amount.toDoubleOrNull()
             val custId = selectedCustomer?.id
-            if (amt != null && amt > 0 && custId != null) {
-                onSave(custId, amt, date, description)
+            if (amtNum > 0 && custId != null) {
+                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                Toast.makeText(context, "Payment record ho gayi! ✨", Toast.LENGTH_SHORT).show()
+                onSave(custId, amtNum, date, description)
                 onDismiss()
             }
         }
@@ -418,10 +517,12 @@ fun AddBalanceModal(
             onExpandedChange = { expanded = !expanded }
         ) {
             OutlinedTextField(
-                value = selectedCustomer?.let { "${it.name} (Bal: Rs. ${it.pendingBalance})" } ?: "Customer chunein...",
+                value = selectedCustomer?.let { "${it.name} (Bal: Rs. ${it.pendingBalance})" } ?: "",
                 onValueChange = {},
                 readOnly = true,
                 label = { Text("Select Customer *", fontWeight = FontWeight.Bold) },
+                placeholder = { Text("Customer chunein...", color = DarkBlue.copy(alpha = 0.5f), fontWeight = FontWeight.Bold) },
+                leadingIcon = { Icon(Icons.Default.Person, contentDescription = null, tint = DarkBlue) },
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                 shape = RoundedCornerShape(14.dp),
                 modifier = Modifier
@@ -439,7 +540,7 @@ fun AddBalanceModal(
                         text = {
                             Column {
                                 Text(cust.name, color = DarkBlue, fontWeight = FontWeight.Bold)
-                                Text("Phone: ${cust.phone} | Bal: Rs. ${cust.pendingBalance}", color = DarkBlue.copy(alpha = 0.7f), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                Text("Phone: ${cust.phone} • Bal: Rs. ${cust.pendingBalance}", color = DarkBlue.copy(alpha = 0.7f), fontSize = 12.sp, fontWeight = FontWeight.Bold)
                             }
                         },
                         onClick = {
@@ -451,43 +552,44 @@ fun AddBalanceModal(
             }
         }
 
-        OutlinedTextField(
-            value = amount,
-            onValueChange = { amount = it },
-            label = { Text("Amount Received (Rs.) *", fontWeight = FontWeight.Bold) },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            shape = RoundedCornerShape(14.dp),
-            modifier = Modifier.fillMaxWidth(),
-            colors = standardTextFieldColors()
-        )
-
-        Box(modifier = Modifier.fillMaxWidth()) {
+        Column {
             OutlinedTextField(
-                value = date,
-                onValueChange = {},
-                readOnly = true,
-                label = { Text("Payment Date", fontWeight = FontWeight.Bold) },
-                trailingIcon = {
-                    IconButton(onClick = {
-                        showDatePickerDialog(context, date) { date = it }
-                    }) {
-                        Icon(Icons.Default.CalendarMonth, contentDescription = "Select Date", tint = DarkBlue)
-                    }
-                },
+                value = amount,
+                onValueChange = { amount = it; touchedAmount = true },
+                label = { Text("Amount Received *", fontWeight = FontWeight.Bold) },
+                prefix = { Text("Rs. ", fontWeight = FontWeight.Bold, color = DarkBlue) },
+                leadingIcon = { Icon(Icons.Default.Payments, contentDescription = null, tint = DarkBlue) },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                isError = touchedAmount && amtNum <= 0.0,
+                singleLine = true,
                 shape = RoundedCornerShape(14.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable {
-                        showDatePickerDialog(context, date) { date = it }
-                    },
+                modifier = Modifier.fillMaxWidth(),
                 colors = standardTextFieldColors()
             )
+            if (touchedAmount && amtNum <= 0.0) {
+                Text(
+                    text = "Sahih raqam darj karein",
+                    color = AlertRed,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(start = 8.dp, top = 2.dp)
+                )
+            }
         }
+
+        TappableDateRow(
+            label = "Payment Date",
+            dateValue = date,
+            onClick = {
+                showDatePickerDialog(context, date) { date = it }
+            }
+        )
 
         OutlinedTextField(
             value = description,
             onValueChange = { description = it },
             label = { Text("Description (Optional)", fontWeight = FontWeight.Bold) },
+            leadingIcon = { Icon(Icons.Default.Description, contentDescription = null, tint = DarkBlue) },
             shape = RoundedCornerShape(14.dp),
             modifier = Modifier.fillMaxWidth(),
             colors = standardTextFieldColors()
@@ -502,6 +604,7 @@ fun AddExpenseModal(
     onSave: (String, Double, String, String, String) -> Unit
 ) {
     val context = LocalContext.current
+    val haptic = LocalHapticFeedback.current
     var title by remember { mutableStateOf("") }
     var amount by remember { mutableStateOf("") }
     var date by remember { mutableStateOf(getTodayDateString()) }
@@ -509,37 +612,73 @@ fun AddExpenseModal(
     var description by remember { mutableStateOf("") }
     val categories = listOf("Raw Material", "Marketing", "Logistics", "Others")
 
+    var touchedTitle by remember { mutableStateOf(false) }
+    var touchedAmount by remember { mutableStateOf(false) }
+
+    val amtNum = amount.toDoubleOrNull() ?: 0.0
+    val isValid = title.isNotBlank() && amtNum > 0.0
+
     AnimatedCenterDialog(
         onDismiss = onDismiss,
         title = "Naya Expense",
         icon = Icons.Default.Receipt,
-        saveEnabled = title.isNotBlank() && (amount.toDoubleOrNull() ?: 0.0) > 0.0,
+        saveEnabled = isValid,
         onSave = {
-            val amt = amount.toDoubleOrNull()
-            if (title.isNotBlank() && amt != null && amt > 0) {
-                onSave(title.trim(), amt, date, category, description.trim())
+            if (isValid) {
+                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                Toast.makeText(context, "Kharcha save ho gaya! ✨", Toast.LENGTH_SHORT).show()
+                onSave(title.trim(), amtNum, date, category, description.trim())
                 onDismiss()
             }
         }
     ) {
-        OutlinedTextField(
-            value = title,
-            onValueChange = { title = it },
-            label = { Text("Title *", fontWeight = FontWeight.Bold) },
-            shape = RoundedCornerShape(14.dp),
-            modifier = Modifier.fillMaxWidth(),
-            colors = standardTextFieldColors()
-        )
+        Column {
+            OutlinedTextField(
+                value = title,
+                onValueChange = { title = it; touchedTitle = true },
+                label = { Text("Expense Title *", fontWeight = FontWeight.Bold) },
+                leadingIcon = { Icon(Icons.Default.Edit, contentDescription = null, tint = DarkBlue) },
+                isError = touchedTitle && title.isBlank(),
+                singleLine = true,
+                shape = RoundedCornerShape(14.dp),
+                modifier = Modifier.fillMaxWidth(),
+                colors = standardTextFieldColors()
+            )
+            if (touchedTitle && title.isBlank()) {
+                Text(
+                    text = "Kharcha ka naam likhna zaroori hai",
+                    color = AlertRed,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(start = 8.dp, top = 2.dp)
+                )
+            }
+        }
 
-        OutlinedTextField(
-            value = amount,
-            onValueChange = { amount = it },
-            label = { Text("Amount * Rs.", fontWeight = FontWeight.Bold) },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            shape = RoundedCornerShape(14.dp),
-            modifier = Modifier.fillMaxWidth(),
-            colors = standardTextFieldColors()
-        )
+        Column {
+            OutlinedTextField(
+                value = amount,
+                onValueChange = { amount = it; touchedAmount = true },
+                label = { Text("Expense Amount *", fontWeight = FontWeight.Bold) },
+                prefix = { Text("Rs. ", fontWeight = FontWeight.Bold, color = DarkBlue) },
+                leadingIcon = { Icon(Icons.Default.AttachMoney, contentDescription = null, tint = DarkBlue) },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                isError = touchedAmount && amtNum <= 0.0,
+                singleLine = true,
+                shape = RoundedCornerShape(14.dp),
+                modifier = Modifier.fillMaxWidth(),
+                colors = standardTextFieldColors()
+            )
+            if (touchedAmount && amtNum <= 0.0) {
+                Text(
+                    text = "Kharcha ki sahih raqam darj karein",
+                    color = AlertRed,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(start = 8.dp, top = 2.dp)
+                )
+            }
+        }
 
         Text("Category *", color = DarkBlue, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelMedium)
         Row(
@@ -593,33 +732,19 @@ fun AddExpenseModal(
             }
         }
 
-        Box(modifier = Modifier.fillMaxWidth()) {
-            OutlinedTextField(
-                value = date,
-                onValueChange = {},
-                readOnly = true,
-                label = { Text("Date *", fontWeight = FontWeight.Bold) },
-                trailingIcon = {
-                    IconButton(onClick = {
-                        showDatePickerDialog(context, date) { date = it }
-                    }) {
-                        Icon(Icons.Default.CalendarMonth, contentDescription = "Select Date", tint = DarkBlue)
-                    }
-                },
-                shape = RoundedCornerShape(14.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable {
-                        showDatePickerDialog(context, date) { date = it }
-                    },
-                colors = standardTextFieldColors()
-            )
-        }
+        TappableDateRow(
+            label = "Expense Date",
+            dateValue = date,
+            onClick = {
+                showDatePickerDialog(context, date) { date = it }
+            }
+        )
 
         OutlinedTextField(
             value = description,
             onValueChange = { description = it },
             label = { Text("Description (Optional)", fontWeight = FontWeight.Bold) },
+            leadingIcon = { Icon(Icons.Default.Description, contentDescription = null, tint = DarkBlue) },
             shape = RoundedCornerShape(14.dp),
             modifier = Modifier.fillMaxWidth(),
             colors = standardTextFieldColors()
@@ -634,12 +759,17 @@ fun AddBatchModal(
     onSave: (Double, Int, Double, Int, String, String) -> Unit
 ) {
     val context = LocalContext.current
+    val haptic = LocalHapticFeedback.current
     var rawCost by remember { mutableStateOf("") }
     var emptyJarsData by remember { mutableStateOf("") }
     var jarCost by remember { mutableStateOf("") }
     var jarsProducedData by remember { mutableStateOf("") }
     var date by remember { mutableStateOf(getTodayDateString()) }
     var notes by remember { mutableStateOf("") }
+
+    var touchedRaw by remember { mutableStateOf(false) }
+    var touchedEmpty by remember { mutableStateOf(false) }
+    var touchedProduced by remember { mutableStateOf(false) }
 
     val rawMat = rawCost.toDoubleOrNull() ?: 0.0
     val jarsQty = emptyJarsData.toIntOrNull() ?: 0
@@ -650,85 +780,121 @@ fun AddBatchModal(
     val totalBatchCost = rawMat + totalJarCost
     val costPerReadyJar = if (totalReady > 0) totalBatchCost / totalReady else 0.0
 
+    val isValid = rawMat > 0 && jarsQty > 0 && totalReady > 0
+
     AnimatedCenterDialog(
         onDismiss = onDismiss,
-        title = "Naya Batch",
+        title = "Naya Production Batch",
         icon = Icons.Default.Build,
-        saveEnabled = rawMat > 0 && jarsQty > 0 && totalReady > 0,
+        saveEnabled = isValid,
         onSave = {
-            if (rawMat > 0 && jarsQty > 0 && costPerJar >= 0 && totalReady > 0) {
+            if (isValid) {
+                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                Toast.makeText(context, "Batch save ho gaya! ✨", Toast.LENGTH_SHORT).show()
                 onSave(rawMat, jarsQty, costPerJar, totalReady, date, notes)
                 onDismiss()
             }
         }
     ) {
-        OutlinedTextField(
-            value = rawCost,
-            onValueChange = { rawCost = it },
-            label = { Text("Raw Material Cost * Rs.", fontWeight = FontWeight.Bold) },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            shape = RoundedCornerShape(14.dp),
-            modifier = Modifier.fillMaxWidth(),
-            colors = standardTextFieldColors()
-        )
+        Column {
+            OutlinedTextField(
+                value = rawCost,
+                onValueChange = { rawCost = it; touchedRaw = true },
+                label = { Text("Raw Material Cost *", fontWeight = FontWeight.Bold) },
+                prefix = { Text("Rs. ", fontWeight = FontWeight.Bold, color = DarkBlue) },
+                leadingIcon = { Icon(Icons.Default.AttachMoney, contentDescription = null, tint = DarkBlue) },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                isError = touchedRaw && rawMat <= 0.0,
+                singleLine = true,
+                shape = RoundedCornerShape(14.dp),
+                modifier = Modifier.fillMaxWidth(),
+                colors = standardTextFieldColors()
+            )
+            if (touchedRaw && rawMat <= 0.0) {
+                Text(
+                    text = "Raw material ki laagat darj karein",
+                    color = AlertRed,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(start = 8.dp, top = 2.dp)
+                )
+            }
+        }
 
-        OutlinedTextField(
-            value = emptyJarsData,
-            onValueChange = { emptyJarsData = it },
-            label = { Text("Empty Jars Quantity *", fontWeight = FontWeight.Bold) },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            shape = RoundedCornerShape(14.dp),
-            modifier = Modifier.fillMaxWidth(),
-            colors = standardTextFieldColors()
-        )
+        Column {
+            OutlinedTextField(
+                value = emptyJarsData,
+                onValueChange = { emptyJarsData = it; touchedEmpty = true },
+                label = { Text("Empty Jars Quantity *", fontWeight = FontWeight.Bold) },
+                leadingIcon = { Icon(Icons.Default.Inventory2, contentDescription = null, tint = DarkBlue) },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                isError = touchedEmpty && jarsQty <= 0,
+                singleLine = true,
+                shape = RoundedCornerShape(14.dp),
+                modifier = Modifier.fillMaxWidth(),
+                colors = standardTextFieldColors()
+            )
+            if (touchedEmpty && jarsQty <= 0) {
+                Text(
+                    text = "Khali jars ki tadad darj karein",
+                    color = AlertRed,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(start = 8.dp, top = 2.dp)
+                )
+            }
+        }
 
         OutlinedTextField(
             value = jarCost,
             onValueChange = { jarCost = it },
-            label = { Text("Cost Per Empty Jar * Rs.", fontWeight = FontWeight.Bold) },
+            label = { Text("Cost Per Empty Jar", fontWeight = FontWeight.Bold) },
+            prefix = { Text("Rs. ", fontWeight = FontWeight.Bold, color = DarkBlue) },
+            leadingIcon = { Icon(Icons.Default.Payments, contentDescription = null, tint = DarkBlue) },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            singleLine = true,
             shape = RoundedCornerShape(14.dp),
             modifier = Modifier.fillMaxWidth(),
             colors = standardTextFieldColors()
         )
 
-        OutlinedTextField(
-            value = jarsProducedData,
-            onValueChange = { jarsProducedData = it },
-            label = { Text("Total Jars Ready *", fontWeight = FontWeight.Bold) },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            shape = RoundedCornerShape(14.dp),
-            modifier = Modifier.fillMaxWidth(),
-            colors = standardTextFieldColors()
-        )
-
-        Box(modifier = Modifier.fillMaxWidth()) {
+        Column {
             OutlinedTextField(
-                value = date,
-                onValueChange = {},
-                readOnly = true,
-                label = { Text("Date *", fontWeight = FontWeight.Bold) },
-                trailingIcon = {
-                    IconButton(onClick = {
-                        showDatePickerDialog(context, date) { date = it }
-                    }) {
-                        Icon(Icons.Default.CalendarMonth, contentDescription = "Select Date", tint = DarkBlue)
-                    }
-                },
+                value = jarsProducedData,
+                onValueChange = { jarsProducedData = it; touchedProduced = true },
+                label = { Text("Total Jars Ready *", fontWeight = FontWeight.Bold) },
+                leadingIcon = { Icon(Icons.Default.Build, contentDescription = null, tint = DarkBlue) },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                isError = touchedProduced && totalReady <= 0,
+                singleLine = true,
                 shape = RoundedCornerShape(14.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable {
-                        showDatePickerDialog(context, date) { date = it }
-                    },
+                modifier = Modifier.fillMaxWidth(),
                 colors = standardTextFieldColors()
             )
+            if (touchedProduced && totalReady <= 0) {
+                Text(
+                    text = "Tayar jars ki tadad darj karein",
+                    color = AlertRed,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(start = 8.dp, top = 2.dp)
+                )
+            }
         }
+
+        TappableDateRow(
+            label = "Production Date",
+            dateValue = date,
+            onClick = {
+                showDatePickerDialog(context, date) { date = it }
+            }
+        )
 
         OutlinedTextField(
             value = notes,
             onValueChange = { notes = it },
             label = { Text("Notes (Optional)", fontWeight = FontWeight.Bold) },
+            leadingIcon = { Icon(Icons.Default.Description, contentDescription = null, tint = DarkBlue) },
             shape = RoundedCornerShape(14.dp),
             modifier = Modifier.fillMaxWidth(),
             colors = standardTextFieldColors()
@@ -761,11 +927,14 @@ fun AddTaskModal(
     onSave: (String, String, String, String) -> Unit
 ) {
     val context = LocalContext.current
+    val haptic = LocalHapticFeedback.current
     var title by remember { mutableStateOf("") }
     var category by remember { mutableStateOf("Social Media") }
     var description by remember { mutableStateOf("") }
     var reminderTime by remember { mutableStateOf("") }
     val categories = listOf("Social Media", "Customer Follow-up", "Production", "Admin")
+
+    var touchedTitle by remember { mutableStateOf(false) }
 
     AnimatedCenterDialog(
         onDismiss = onDismiss,
@@ -774,19 +943,35 @@ fun AddTaskModal(
         saveEnabled = title.isNotBlank(),
         onSave = {
             if (title.isNotBlank()) {
+                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                Toast.makeText(context, "Task save ho gaya! ✨", Toast.LENGTH_SHORT).show()
                 onSave(title.trim(), category, description.trim(), reminderTime)
                 onDismiss()
             }
         }
     ) {
-        OutlinedTextField(
-            value = title,
-            onValueChange = { title = it },
-            label = { Text("Task Title *", fontWeight = FontWeight.Bold) },
-            shape = RoundedCornerShape(14.dp),
-            modifier = Modifier.fillMaxWidth(),
-            colors = standardTextFieldColors()
-        )
+        Column {
+            OutlinedTextField(
+                value = title,
+                onValueChange = { title = it; touchedTitle = true },
+                label = { Text("Task Title *", fontWeight = FontWeight.Bold) },
+                leadingIcon = { Icon(Icons.Default.Checklist, contentDescription = null, tint = DarkBlue) },
+                isError = touchedTitle && title.isBlank(),
+                singleLine = true,
+                shape = RoundedCornerShape(14.dp),
+                modifier = Modifier.fillMaxWidth(),
+                colors = standardTextFieldColors()
+            )
+            if (touchedTitle && title.isBlank()) {
+                Text(
+                    text = "Task ka naam likhna zaroori hai",
+                    color = AlertRed,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(start = 8.dp, top = 2.dp)
+                )
+            }
+        }
 
         Text("Category", color = DarkBlue, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelMedium)
         Row(
@@ -844,33 +1029,59 @@ fun AddTaskModal(
             value = description,
             onValueChange = { description = it },
             label = { Text("Description (Optional)", fontWeight = FontWeight.Bold) },
+            leadingIcon = { Icon(Icons.Default.Description, contentDescription = null, tint = DarkBlue) },
             shape = RoundedCornerShape(14.dp),
             modifier = Modifier.fillMaxWidth(),
             colors = standardTextFieldColors()
         )
 
-        Box(modifier = Modifier.fillMaxWidth()) {
-            OutlinedTextField(
-                value = reminderTime,
-                onValueChange = {},
-                readOnly = true,
-                label = { Text("Reminder Time (Optional)", fontWeight = FontWeight.Bold) },
-                placeholder = { Text("Waqt chunein...", color = DarkBlue.copy(alpha = 0.6f), fontWeight = FontWeight.Bold) },
-                trailingIcon = {
-                    IconButton(onClick = {
-                        showTimePickerDialog(context) { reminderTime = it }
-                    }) {
-                        Icon(Icons.Default.AccessTime, contentDescription = "Select Time", tint = DarkBlue)
-                    }
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable {
+                    showTimePickerDialog(context) { reminderTime = it }
                 },
-                shape = RoundedCornerShape(14.dp),
+            shape = RoundedCornerShape(14.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            border = BorderStroke(1.dp, DarkBlue)
+        ) {
+            Row(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable {
-                        showTimePickerDialog(context) { reminderTime = it }
-                    },
-                colors = standardTextFieldColors()
-            )
+                    .padding(horizontal = 14.dp, vertical = 12.dp)
+                    .fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.AccessTime,
+                        contentDescription = null,
+                        tint = DarkBlue,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(Modifier.width(12.dp))
+                    Column {
+                        Text(
+                            text = "Reminder Time (Optional)",
+                            fontSize = 11.sp,
+                            color = DarkBlue.copy(alpha = 0.7f),
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = reminderTime.ifBlank { "Waqt chunein..." },
+                            fontSize = 14.sp,
+                            color = DarkBlue,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+                Icon(
+                    imageVector = Icons.Default.Edit,
+                    contentDescription = "Change Time",
+                    tint = DarkBlue,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
         }
     }
 }

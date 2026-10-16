@@ -7,9 +7,13 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -68,7 +72,7 @@ fun ScheduleScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Daily Schedule", fontWeight = FontWeight.Bold, color = Yellow) },
+                title = { Text("Daily Schedule (${selectedDateTasks.size})", fontWeight = FontWeight.Bold, color = Yellow) },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = DarkBlue,
                     titleContentColor = Yellow,
@@ -106,7 +110,8 @@ fun ScheduleScreen(
             FloatingActionButton(
                 onClick = { showAddTaskModal = true },
                 containerColor = Yellow,
-                contentColor = DarkBlue
+                contentColor = DarkBlue,
+                shape = CircleShape
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Add Task")
             }
@@ -232,7 +237,7 @@ fun ScheduleScreen(
                 }
             }
 
-            // Daily Progress Card with LinearProgressIndicator
+            // Daily Progress Card with "Aaj ki progress: X/Y"
             item {
                 Card(
                     border = BorderStroke(1.dp, CardBorder),
@@ -248,24 +253,33 @@ fun ScheduleScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                "Tasks for $selectedDateStr",
+                                "Aaj ki progress: $completedCount/$totalCount",
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold,
-                                color = Yellow
+                                color = Yellow,
+                                fontSize = 15.sp
                             )
-                            Text(
-                                "$completedCount of $totalCount Completed",
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = if (completedCount == totalCount && totalCount > 0) SuccessGreen else Color.White.copy(alpha = 0.75f)
-                            )
+                            Surface(
+                                color = if (completedCount == totalCount && totalCount > 0) AlertGreenBg else DarkBlueDeep,
+                                shape = RoundedCornerShape(8.dp),
+                                border = BorderStroke(1.dp, if (completedCount == totalCount && totalCount > 0) SuccessGreen else Yellow.copy(alpha = 0.5f))
+                            ) {
+                                Text(
+                                    text = if (completedCount == totalCount && totalCount > 0) "All Done! 🎉" else "$completedCount of $totalCount",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (completedCount == totalCount && totalCount > 0) SuccessGreen else Color.White,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                                )
+                            }
                         }
                         Spacer(Modifier.height(10.dp))
                         LinearProgressIndicator(
                             progress = { progressFraction },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(8.dp),
+                                .height(8.dp)
+                                .clip(RoundedCornerShape(4.dp)),
                             color = if (progressFraction == 1f && totalCount > 0) SuccessGreen else Yellow,
                             trackColor = DarkBlueDeep,
                         )
@@ -280,93 +294,130 @@ fun ScheduleScreen(
                         modifier = Modifier.fillMaxWidth(),
                         colors = CardDefaults.cardColors(containerColor = DarkBlue),
                         border = BorderStroke(1.dp, CardBorder),
-                        shape = RoundedCornerShape(20.dp),
+                        shape = RoundedCornerShape(24.dp),
                         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
                     ) {
                         Column(
                             modifier = Modifier
                                 .padding(32.dp)
                                 .fillMaxWidth(),
-                            horizontalAlignment = Alignment.CenterHorizontally
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
                         ) {
-                            Icon(
-                                Icons.Default.EventAvailable,
-                                contentDescription = null,
-                                tint = Yellow,
-                                modifier = Modifier.size(40.dp)
+                            Box(
+                                modifier = Modifier
+                                    .size(72.dp)
+                                    .clip(CircleShape)
+                                    .background(DarkBlueDeep),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.EventAvailable,
+                                    contentDescription = null,
+                                    tint = Yellow,
+                                    modifier = Modifier.size(40.dp)
+                                )
+                            }
+                            Spacer(Modifier.height(14.dp))
+                            Text(
+                                text = "Koi Task Scheduled Nahi Hai",
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 17.sp,
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
                             )
-                            Spacer(Modifier.height(8.dp))
-                            Text("No tasks scheduled for this date.", color = Color.White.copy(alpha = 0.8f), fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                            Spacer(Modifier.height(8.dp))
+                            Spacer(Modifier.height(6.dp))
+                            Text(
+                                text = "Pehla task add karein taake aaj ki progress shuru ho.",
+                                color = Color.White.copy(alpha = 0.75f),
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 12.sp,
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                            )
+                            Spacer(Modifier.height(18.dp))
                             Button(
                                 onClick = { showAddTaskModal = true },
                                 colors = ButtonDefaults.buttonColors(containerColor = Yellow, contentColor = DarkBlue),
-                                shape = RoundedCornerShape(14.dp)
+                                shape = RoundedCornerShape(14.dp),
+                                modifier = Modifier.height(48.dp)
                             ) {
-                                Text("+ Add Task Now", fontWeight = FontWeight.Bold, color = DarkBlue)
+                                Icon(Icons.Default.Add, contentDescription = null, tint = DarkBlue, modifier = Modifier.size(18.dp))
+                                Spacer(Modifier.width(8.dp))
+                                Text("Pehla Task Add Karein", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = DarkBlue)
                             }
                         }
                     }
                 }
             } else {
                 items(selectedDateTasks, key = { it.id }) { task ->
-                    Card(
-                        border = BorderStroke(1.dp, if (task.isCompleted) CardBorder else Yellow.copy(alpha = 0.5f)),
-                        colors = CardDefaults.cardColors(
-                            containerColor = DarkBlue
-                        ),
-                        shape = RoundedCornerShape(20.dp),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .padding(16.dp)
-                                .fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                    Box(modifier = Modifier.animateItem()) {
+                        val checkScale by animateFloatAsState(
+                            targetValue = if (task.isCompleted) 1.15f else 1f,
+                            animationSpec = tween(200),
+                            label = "checkScale"
+                        )
+
+                        Card(
+                            border = BorderStroke(1.dp, if (task.isCompleted) CardBorder else Yellow.copy(alpha = 0.5f)),
+                            colors = CardDefaults.cardColors(
+                                containerColor = DarkBlue
+                            ),
+                            shape = RoundedCornerShape(20.dp),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
+                            modifier = Modifier.fillMaxWidth()
                         ) {
-                            IconButton(
-                                onClick = { appViewModel.updateDailyTaskCompleted(task, !task.isCompleted) },
-                                modifier = Modifier.size(36.dp)
+                            Row(
+                                modifier = Modifier
+                                    .padding(14.dp)
+                                    .fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Icon(
-                                    imageVector = if (task.isCompleted) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
-                                    contentDescription = if (task.isCompleted) "Completed" else "Incomplete",
-                                    tint = if (task.isCompleted) SuccessGreen else Yellow,
-                                    modifier = Modifier.size(24.dp)
-                                )
-                            }
-                            Spacer(Modifier.width(8.dp))
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = task.taskName,
-                                    fontWeight = FontWeight.Bold,
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    color = if (task.isCompleted) Color.White.copy(alpha = 0.5f) else Color.White,
-                                    textDecoration = if (task.isCompleted) TextDecoration.LineThrough else TextDecoration.None
-                                )
-                                if (task.description.isNotBlank()) {
-                                    Spacer(Modifier.height(2.dp))
-                                    Text(
-                                        task.description,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        fontWeight = FontWeight.Bold,
-                                        color = if (task.isCompleted) Color.White.copy(alpha = 0.4f) else Color.White.copy(alpha = 0.7f),
-                                        textDecoration = if (task.isCompleted) TextDecoration.LineThrough else TextDecoration.None
+                                // 48dp Touch Target Checkbox with Green Tick Animation
+                                IconButton(
+                                    onClick = { appViewModel.updateDailyTaskCompleted(task, !task.isCompleted) },
+                                    modifier = Modifier.size(48.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = if (task.isCompleted) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
+                                        contentDescription = if (task.isCompleted) "Completed" else "Incomplete",
+                                        tint = if (task.isCompleted) SuccessGreen else Yellow,
+                                        modifier = Modifier
+                                            .size(26.dp)
+                                            .graphicsLayer { scaleX = checkScale; scaleY = checkScale }
                                     )
                                 }
-                            }
-                            IconButton(
-                                onClick = { appViewModel.deleteDailyTask(task) },
-                                modifier = Modifier.size(36.dp)
-                            ) {
-                                Icon(
-                                    Icons.Default.DeleteOutline,
-                                    contentDescription = "Delete Task",
-                                    tint = AlertRed,
-                                    modifier = Modifier.size(20.dp)
-                                )
+                                Spacer(Modifier.width(6.dp))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = task.taskName,
+                                        fontWeight = FontWeight.Bold,
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        color = if (task.isCompleted) Color.White.copy(alpha = 0.5f) else Color.White,
+                                        textDecoration = if (task.isCompleted) TextDecoration.LineThrough else TextDecoration.None
+                                    )
+                                    if (task.description.isNotBlank()) {
+                                        Spacer(Modifier.height(2.dp))
+                                        Text(
+                                            task.description,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            fontWeight = FontWeight.Bold,
+                                            color = if (task.isCompleted) Color.White.copy(alpha = 0.4f) else Color.White.copy(alpha = 0.7f),
+                                            textDecoration = if (task.isCompleted) TextDecoration.LineThrough else TextDecoration.None
+                                        )
+                                    }
+                                }
+                                IconButton(
+                                    onClick = { appViewModel.deleteDailyTask(task) },
+                                    modifier = Modifier.size(48.dp)
+                                ) {
+                                    Icon(
+                                        Icons.Default.DeleteOutline,
+                                        contentDescription = "Delete Task",
+                                        tint = AlertRed,
+                                        modifier = Modifier.size(22.dp)
+                                    )
+                                }
                             }
                         }
                     }

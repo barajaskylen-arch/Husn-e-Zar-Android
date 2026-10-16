@@ -68,6 +68,15 @@ interface AppDao {
     @Update
     suspend fun updateOrder(order: Order)
 
+    @Update
+    suspend fun updateInventoryBatch(batch: InventoryBatch)
+
+    @Update
+    suspend fun updateExpense(expense: Expense)
+
+    @Update
+    suspend fun updateCustomerPayment(payment: CustomerPayment)
+
     @Query("DELETE FROM customers WHERE id = :id")
     suspend fun deleteCustomerById(id: String)
 

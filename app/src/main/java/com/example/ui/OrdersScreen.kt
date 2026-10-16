@@ -11,6 +11,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
@@ -58,19 +60,28 @@ fun OrdersScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Master Order Registry", fontWeight = FontWeight.Bold, color = Yellow) },
+                title = { Text("Master Order Registry (${filteredOrders.size})", fontWeight = FontWeight.Bold, color = Yellow) },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = DarkBlue,
                     titleContentColor = Yellow,
                     actionIconContentColor = Yellow
-                )
+                ),
+                actions = {
+                    IconButton(
+                        onClick = { showAddOrderModal = true },
+                        modifier = Modifier.size(48.dp)
+                    ) {
+                        Icon(Icons.Default.Add, contentDescription = "Add Order", tint = Yellow)
+                    }
+                }
             )
         },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { showAddOrderModal = true },
                 containerColor = Yellow,
-                contentColor = DarkBlue
+                contentColor = DarkBlue,
+                shape = CircleShape
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Add Order")
             }
@@ -91,10 +102,17 @@ fun OrdersScreen(
                         value = searchQuery,
                         onValueChange = ordersViewModel::updateSearchQuery,
                         modifier = Modifier.fillMaxWidth(),
-                        placeholder = { Text("Search Customer or Order ID...", color = DarkBlue.copy(alpha = 0.6f), fontWeight = FontWeight.Bold) },
+                        placeholder = { Text("Search Customer or Order ID...", color = DarkBlue.copy(alpha = 0.6f), fontWeight = FontWeight.Bold, fontSize = 13.sp) },
                         leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search", tint = DarkBlue) },
+                        trailingIcon = {
+                            if (searchQuery.isNotEmpty()) {
+                                IconButton(onClick = { ordersViewModel.updateSearchQuery("") }) {
+                                    Icon(Icons.Default.Close, contentDescription = "Clear Search", tint = DarkBlue)
+                                }
+                            }
+                        },
                         singleLine = true,
-                        shape = RoundedCornerShape(14.dp),
+                        shape = RoundedCornerShape(24.dp),
                         colors = standardTextFieldColors()
                     )
                 }
@@ -106,34 +124,87 @@ fun OrdersScreen(
                         modifier = Modifier.fillMaxWidth(),
                         colors = CardDefaults.cardColors(containerColor = DarkBlue),
                         border = BorderStroke(1.dp, CardBorder),
-                        shape = RoundedCornerShape(20.dp),
+                        shape = RoundedCornerShape(24.dp),
                         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
                     ) {
-                        Box(Modifier.padding(32.dp).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                            Text("No orders found.", color = Color.White.copy(alpha = 0.8f), fontWeight = FontWeight.Bold)
+                        Column(
+                            modifier = Modifier
+                                .padding(32.dp)
+                                .fillMaxWidth(),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(72.dp)
+                                    .clip(CircleShape)
+                                    .background(DarkBlueDeep),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.ReceiptLong,
+                                    contentDescription = null,
+                                    tint = Yellow,
+                                    modifier = Modifier.size(40.dp)
+                                )
+                            }
+                            Spacer(Modifier.height(14.dp))
+                            Text(
+                                text = if (searchQuery.isEmpty()) "Koi Order Nahi Hai" else "Koi Nateeja Nahi Mila",
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 17.sp,
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                            )
+                            Spacer(Modifier.height(6.dp))
+                            Text(
+                                text = if (searchQuery.isEmpty()) "Pehla order banayein taake sale aur inventory record shuru hon." else "Di gayi search query ke mutabiq koi order nahi mila.",
+                                color = Color.White.copy(alpha = 0.75f),
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 12.sp,
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                            )
+                            if (searchQuery.isEmpty()) {
+                                Spacer(Modifier.height(18.dp))
+                                Button(
+                                    onClick = { showAddOrderModal = true },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Yellow,
+                                        contentColor = DarkBlue
+                                    ),
+                                    shape = RoundedCornerShape(14.dp),
+                                    modifier = Modifier.height(48.dp)
+                                ) {
+                                    Icon(Icons.Default.AddShoppingCart, contentDescription = null, tint = DarkBlue, modifier = Modifier.size(18.dp))
+                                    Spacer(Modifier.width(8.dp))
+                                    Text("Pehla Order Banayein", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = DarkBlue)
+                                }
+                            }
                         }
                     }
                 }
             } else {
-                items(filteredOrders) { order ->
-                    OrderRow(
-                        order = order,
-                        onAddPayment = { showPaymentModal = order },
-                        onShareReceipt = {
-                            val cust = customers.find { it.id == order.customerId }
-                                ?: Customer(
-                                    id = order.customerId,
-                                    name = order.customerName,
-                                    phone = "-",
-                                    address = "-",
-                                    joiningDate = "",
-                                    pendingBalance = 0.0
-                                )
-                            receiptDialogTitle = "Order Receipt"
-                            receiptText = generateOrderReceipt(order, cust)
-                            showReceiptDialog = true
-                        }
-                    )
+                items(filteredOrders, key = { it.id }) { order ->
+                    Box(modifier = Modifier.animateItem()) {
+                        OrderRow(
+                            order = order,
+                            onAddPayment = { showPaymentModal = order },
+                            onShareReceipt = {
+                                val cust = customers.find { it.id == order.customerId }
+                                    ?: Customer(
+                                        id = order.customerId,
+                                        name = order.customerName,
+                                        phone = "-",
+                                        address = "-",
+                                        joiningDate = "",
+                                        pendingBalance = 0.0
+                                    )
+                                receiptDialogTitle = "Order Receipt"
+                                receiptText = generateOrderReceipt(order, cust)
+                                showReceiptDialog = true
+                            }
+                        )
+                    }
                 }
             }
             item { Spacer(Modifier.height(80.dp)) }
@@ -339,6 +410,13 @@ fun OrderRow(
     onAddPayment: () -> Unit,
     onShareReceipt: () -> Unit
 ) {
+    val isPaid = order.paidAmount >= order.totalAmount && order.totalAmount > 0
+    val isPartial = order.paidAmount > 0 && order.paidAmount < order.totalAmount
+    val statusLabel = if (isPaid) "Paid" else if (isPartial) "Partial" else "Pending"
+    val statusColor = if (isPaid) SuccessGreen else if (isPartial) Yellow else AlertRed
+    val statusBg = if (isPaid) AlertGreenBg else if (isPartial) AlertYellowBg else AlertRedBg
+    val paidRatio = if (order.totalAmount > 0) (order.paidAmount / order.totalAmount).toFloat().coerceIn(0f, 1f) else 0f
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         border = BorderStroke(1.dp, CardBorder),
@@ -347,80 +425,129 @@ fun OrderRow(
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
+            // Header Row: Customer Name & Order ID + Status Chip
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "${order.id} - ${order.customerName}",
-                    fontWeight = FontWeight.Bold,
-                    color = Yellow,
-                    style = MaterialTheme.typography.titleMedium
-                )
-                Text(order.orderDate, color = Color.White.copy(alpha = 0.7f), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelMedium)
-            }
-            Spacer(Modifier.height(8.dp))
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("Jars: ${order.jarsQuantity}", color = Color.White.copy(alpha = 0.8f), fontWeight = FontWeight.Bold)
-                Text("Total: ${formatMoney(order.totalAmount)}", fontWeight = FontWeight.Bold, color = Color.White)
-            }
-            Spacer(Modifier.height(6.dp))
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("Paid: ${formatMoney(order.paidAmount)}", color = SuccessGreen, fontWeight = FontWeight.Bold)
-                Text(
-                    "Pending: ${formatMoney(order.pendingAmount)}",
-                    color = if (order.pendingAmount > 0) AlertRed else SuccessGreen,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-            if (order.pendingAmount > 0) {
-                Spacer(Modifier.height(6.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        "Due: ${order.dueDate}",
-                        color = AlertRed,
+                        text = "${order.id} • ${order.customerName}",
                         fontWeight = FontWeight.Bold,
-                        style = MaterialTheme.typography.labelSmall
+                        color = Yellow,
+                        style = MaterialTheme.typography.titleMedium
                     )
-                    Surface(
-                        color = AlertRedBg,
-                        shape = RoundedCornerShape(6.dp),
-                        border = BorderStroke(1.dp, AlertRed)
-                    ) {
-                        Text(
-                            text = "Udhar / Credit",
-                            color = AlertRed,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
-                        )
-                    }
                 }
-            } else {
-                Spacer(Modifier.height(6.dp))
+                Spacer(Modifier.width(8.dp))
+                // Status Chip: Paid (green), Partial (yellow), Pending (red)
                 Surface(
-                    color = AlertGreenBg,
-                    shape = RoundedCornerShape(6.dp),
-                    border = BorderStroke(1.dp, SuccessGreen)
+                    color = statusBg,
+                    shape = RoundedCornerShape(8.dp),
+                    border = BorderStroke(1.dp, statusColor)
                 ) {
                     Text(
-                        text = "Paid / Clear",
-                        color = SuccessGreen,
+                        text = statusLabel,
+                        color = statusColor,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp)
                     )
                 }
             }
 
-            Spacer(Modifier.height(12.dp))
-            HorizontalDivider(color = CardBorder)
+            Spacer(Modifier.height(10.dp))
+
+            // Date and Jars Quantity with Icons
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.CalendarToday,
+                        contentDescription = "Date",
+                        tint = Yellow,
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        text = order.orderDate,
+                        color = Color.White.copy(alpha = 0.85f),
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 12.sp
+                    )
+                }
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.Inventory2,
+                        contentDescription = "Jars",
+                        tint = Yellow,
+                        modifier = Modifier.size(15.dp)
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        text = "${order.jarsQuantity} Jars",
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 13.sp
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(10.dp))
+
+            // Financial Summary
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text("Total: ${formatMoney(order.totalAmount)}", fontWeight = FontWeight.Bold, color = Color.White, fontSize = 13.sp)
+                Text("Paid: ${formatMoney(order.paidAmount)}", color = SuccessGreen, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                Text(
+                    "Baaqi: ${formatMoney(order.pendingAmount)}",
+                    color = if (order.pendingAmount > 0) AlertRed else SuccessGreen,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 13.sp
+                )
+            }
+
             Spacer(Modifier.height(8.dp))
+
+            // Paid / Total Thin Progress Bar
+            Column(modifier = Modifier.fillMaxWidth()) {
+                LinearProgressIndicator(
+                    progress = { paidRatio },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(5.dp)
+                        .clip(RoundedCornerShape(3.dp)),
+                    color = statusColor,
+                    trackColor = DarkBlueDeep
+                )
+                Spacer(Modifier.height(4.dp))
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text(
+                        text = "${(paidRatio * 100).toInt()}% paid",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White.copy(alpha = 0.65f)
+                    )
+                    if (order.pendingAmount > 0 && order.dueDate.isNotBlank()) {
+                        Text(
+                            text = "Due: ${order.dueDate}",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = AlertRed
+                        )
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(12.dp))
+            HorizontalDivider(color = CardBorder, thickness = 1.dp)
+            Spacer(Modifier.height(8.dp))
+
+            // Action Buttons
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End,
@@ -434,7 +561,8 @@ fun OrderRow(
                             contentColor = DarkBlue
                         ),
                         shape = RoundedCornerShape(14.dp),
-                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
+                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
+                        modifier = Modifier.height(40.dp)
                     ) {
                         Icon(Icons.Default.Payment, contentDescription = null, modifier = Modifier.size(16.dp), tint = DarkBlue)
                         Spacer(Modifier.width(6.dp))
@@ -442,7 +570,10 @@ fun OrderRow(
                     }
                 }
                 Spacer(Modifier.width(8.dp))
-                IconButton(onClick = onShareReceipt) {
+                IconButton(
+                    onClick = onShareReceipt,
+                    modifier = Modifier.size(40.dp)
+                ) {
                     Icon(Icons.Default.Share, contentDescription = "Share Receipt", tint = Yellow)
                 }
             }

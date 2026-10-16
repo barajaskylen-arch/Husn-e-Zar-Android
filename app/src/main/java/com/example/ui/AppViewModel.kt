@@ -17,7 +17,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     private val database = AppDatabase.getDatabase(application)
     val supabaseAuth = com.example.data.remote.SupabaseAuth(application)
     val syncManager = com.example.data.remote.SyncManager(application, database.appDao(), supabaseAuth)
-    private val repository = AppRepository(database.appDao(), syncManager)
+    private val repository = AppRepository(database.appDao(), syncManager, database)
     private val prefs = application.getSharedPreferences("husn_e_zar_prefs", Context.MODE_PRIVATE)
 
     val isLoggedIn: StateFlow<Boolean> = supabaseAuth.isLoggedInFlow
@@ -204,9 +204,63 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun deleteCustomerCascade(customerId: String) {
+        viewModelScope.launch {
+            repository.deleteCustomerCascade(customerId)
+        }
+    }
+
     fun updateOrder(oldOrder: Order, newOrder: Order) {
         viewModelScope.launch {
             repository.updateOrder(oldOrder, newOrder)
+        }
+    }
+
+    fun deleteOrder(order: Order) {
+        viewModelScope.launch {
+            repository.deleteOrder(order)
+        }
+    }
+
+    fun updateExpense(expense: Expense) {
+        viewModelScope.launch {
+            repository.updateExpense(expense)
+        }
+    }
+
+    fun deleteExpense(id: String) {
+        viewModelScope.launch {
+            repository.deleteExpense(id)
+        }
+    }
+
+    fun updateInventoryBatch(batch: InventoryBatch) {
+        viewModelScope.launch {
+            repository.updateInventoryBatch(batch)
+        }
+    }
+
+    fun deleteInventoryBatch(id: String) {
+        viewModelScope.launch {
+            repository.deleteInventoryBatch(id)
+        }
+    }
+
+    fun updateCustomerPayment(oldPayment: CustomerPayment, newPayment: CustomerPayment) {
+        viewModelScope.launch {
+            repository.updateCustomerPayment(oldPayment, newPayment)
+        }
+    }
+
+    fun deleteCustomerPayment(payment: CustomerPayment) {
+        viewModelScope.launch {
+            repository.deleteCustomerPayment(payment)
+        }
+    }
+
+    fun updateDailyTask(task: DailyTask) {
+        viewModelScope.launch {
+            repository.updateDailyTask(task)
         }
     }
 
